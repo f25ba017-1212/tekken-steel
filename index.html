@@ -1,0 +1,1224 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>鐵建 現場ポータル</title>
+<style>
+:root{
+  --brand-dark:#0d47a1;--brand-mid:#1976d2;--brand-accent:#2196f3;--brand-hover:#1565c0;
+  --bg-page:#f4f6f9;--bg-card:#fff;--bg-notice:#fff8e1;
+  --text-main:#222;--text-sub:#555;--white:#fff;
+  --radius:10px;--shadow:0 5px 10px rgba(0,0,0,.15);--font:"Yu Gothic","游ゴシック",sans-serif;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg-page);color:var(--text-main);font-family:var(--font);min-height:100vh;display:flex;flex-direction:column;}
+
+/* HEADER */
+header{background:var(--brand-dark);color:var(--white);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;border-bottom:4px solid var(--brand-accent);}
+.hdr-left h1{font-size:22px;font-weight:800;letter-spacing:.04em;}
+.hdr-left p{font-size:12px;color:#b0bcd4;margin-top:2px;}
+.hdr-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.hdr-info{text-align:right;font-size:12px;color:#b0bcd4;}
+.hdr-date{font-size:14px;color:#90caf9;font-weight:700;}
+.hdr-btns{display:flex;gap:8px;flex-wrap:wrap;}
+.hdr-btn{padding:7px 13px;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:700;font-family:var(--font);}
+#edit-toggle{background:#ff6d00;color:#fff;}
+#edit-toggle.on{background:#43a047;}
+#lang-btn{background:#7b1fa2;color:#fff;}
+#translate-btn{background:#00838f;color:#fff;display:none;}
+#reorder-btn{background:#00695c;color:#fff;display:none;}
+
+/* LANG BAR */
+#lang-bar{display:none;background:#4a148c;padding:8px 24px;gap:8px;flex-wrap:wrap;align-items:center;}
+#lang-bar.show{display:flex;}
+#lang-bar span{color:#ce93d8;font-size:12px;font-weight:700;margin-right:4px;}
+.lang-pill{padding:5px 14px;border:2px solid #ce93d8;border-radius:20px;color:#fff;background:transparent;cursor:pointer;font-size:12px;font-family:var(--font);transition:.2s;}
+.lang-pill.active,.lang-pill:hover{background:#7b1fa2;border-color:#fff;}
+#translate-status{font-size:11px;color:#ce93d8;margin-left:8px;}
+
+/* WEATHER BAR */
+#weather-bar{background:linear-gradient(90deg,#0277bd,#0288d1);color:#fff;padding:10px 24px;display:flex;align-items:center;gap:20px;flex-wrap:wrap;font-size:13px;}
+.wx-item{display:flex;align-items:center;gap:6px;}
+.wx-label{color:#b3e5fc;font-size:11px;}
+.wx-val{font-weight:700;font-size:15px;}
+.wbgt-badge{padding:2px 10px;border-radius:20px;font-size:12px;font-weight:700;}
+.wbgt-safe{background:#1b5e20;}.wbgt-caution{background:#e65100;}.wbgt-warning{background:#b71c1c;}.wbgt-danger{background:#880e4f;}
+#wx-update{font-size:11px;color:#b3e5fc;margin-left:auto;}
+#wx-refresh{background:none;border:1px solid #b3e5fc;color:#b3e5fc;border-radius:4px;padding:3px 8px;cursor:pointer;font-size:11px;font-family:var(--font);}
+
+/* CONTAINER */
+.container{width:95%;max-width:1280px;margin:20px auto;flex:1;}
+
+/* NOTICE */
+.notice{background:var(--bg-notice);border-left:6px solid orange;border-radius:var(--radius);padding:14px 18px;margin-bottom:20px;box-shadow:var(--shadow);}
+.notice-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.notice-hdr h2{font-size:14px;color:var(--brand-dark);}
+#notice-list{list-style:none;display:flex;flex-direction:column;gap:5px;}
+#notice-list li{font-size:13px;padding-left:16px;position:relative;display:flex;align-items:flex-start;gap:6px;}
+#notice-list li::before{content:"▶";position:absolute;left:0;font-size:9px;color:var(--brand-accent);top:4px;}
+#notice-list li.auto-alert::before{color:#e53935;}
+.notice-text{flex:1;}
+.del-btn{background:none;border:none;color:#e53935;cursor:pointer;font-size:15px;line-height:1;padding:0 2px;display:none;}
+.edit-mode .del-btn{display:inline;}
+.add-notice-row{display:none;margin-top:8px;gap:8px;}
+.edit-mode .add-notice-row{display:flex;}
+.add-notice-row input{flex:1;padding:6px 10px;border:1px solid #ccc;border-radius:6px;font-family:var(--font);font-size:13px;}
+.add-notice-row button{padding:6px 12px;background:var(--brand-accent);color:#fff;border:none;border-radius:6px;cursor:pointer;font-family:var(--font);font-weight:700;}
+
+/* SECTION LABEL */
+.section-label{font-size:12px;font-weight:700;color:var(--text-sub);margin-bottom:12px;border-left:3px solid var(--brand-accent);padding-left:8px;}
+
+/* GRID */
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;}
+
+/* CARD */
+.card{background:var(--bg-card);border-radius:var(--radius);box-shadow:var(--shadow);transition:transform .25s,box-shadow .25s;cursor:pointer;overflow:hidden;display:flex;flex-direction:column;position:relative;}
+.card:hover{transform:translateY(-4px);box-shadow:0 10px 22px rgba(0,0,0,.18);}
+.card-head{background:var(--brand-mid);color:var(--white);padding:12px 14px;display:flex;align-items:center;gap:8px;}
+.card-head .icon{font-size:18px;line-height:1;}
+.card-head h2{font-size:15px;font-weight:700;}
+.card-body{padding:12px 14px;flex:1;font-size:13px;color:var(--text-sub);}
+.card-body ul{list-style:none;display:flex;flex-direction:column;gap:4px;}
+.card-body ul li{padding-left:12px;position:relative;line-height:1.5;}
+.card-body ul li::before{content:"–";position:absolute;left:0;color:var(--brand-accent);font-weight:700;}
+.card-foot{padding:0 14px 14px;display:flex;flex-direction:column;gap:6px;}
+.card-status{font-size:11px;color:var(--text-sub);display:flex;align-items:center;gap:4px;}
+.dot{width:7px;height:7px;border-radius:50%;display:inline-block;flex-shrink:0;}
+.dot-ok{background:#43a047;}.dot-warn{background:#fb8c00;}.dot-danger{background:#e53935;}
+.btn{display:block;width:100%;padding:9px;background:var(--brand-accent);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:13px;font-weight:700;font-family:var(--font);transition:background .2s;}
+.btn:hover{background:var(--brand-hover);}
+.card-edit-btn{display:none;position:absolute;top:7px;right:7px;background:rgba(255,255,255,.22);border:none;border-radius:4px;color:#fff;cursor:pointer;font-size:11px;padding:2px 7px;font-family:var(--font);}
+.edit-mode .card-edit-btn{display:block;}
+
+/* MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center;}
+.modal-overlay.active{display:flex;}
+.modal{background:#fff;border-radius:var(--radius);max-width:740px;width:94%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 50px rgba(0,0,0,.3);animation:fadeUp .2s ease;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+.modal-head{background:var(--brand-mid);color:#fff;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;border-radius:var(--radius) var(--radius) 0 0;position:sticky;top:0;z-index:2;}
+.modal-head h3{font-size:16px;font-weight:700;}
+.modal-head-btns{display:flex;align-items:center;gap:8px;}
+.modal-close{background:none;border:none;color:#b0d4ff;font-size:20px;cursor:pointer;line-height:1;padding:2px 6px;}
+.modal-close:hover{color:#fff;}
+.modal-body{padding:20px;}
+.modal-desc{font-size:13px;color:var(--text-sub);margin-bottom:14px;line-height:1.7;border-radius:4px;padding:2px;}
+
+/* TABLE */
+.modal-table{width:100%;border-collapse:collapse;font-size:13px;margin-top:6px;}
+.modal-table th,.modal-table td{padding:8px 10px;border-bottom:1px solid #e0e5f0;text-align:left;vertical-align:top;}
+.modal-table th{background:#f0f3fa;font-weight:700;color:var(--brand-dark);}
+.modal-table td input,.modal-table td textarea,.modal-table td select{width:100%;padding:4px 6px;border:1px solid #bbb;border-radius:4px;font-family:var(--font);font-size:12px;}
+.modal-table td textarea{resize:vertical;min-height:36px;}
+
+/* BADGE */
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;}
+.badge-ok{background:#e8f5e9;color:#2e7d32;}.badge-warn{background:#fff3e0;color:#e65100;}.badge-danger{background:#ffebee;color:#c62828;}
+
+/* TABLE CONTROLS */
+.row-del{background:none;border:none;color:#e53935;cursor:pointer;font-size:16px;line-height:1;padding:0 3px;}
+.add-row-btn{margin-top:10px;padding:7px 14px;background:#e3f2fd;color:var(--brand-dark);border:1px solid var(--brand-accent);border-radius:6px;cursor:pointer;font-family:var(--font);font-weight:700;font-size:12px;}
+.save-btn{margin-top:12px;padding:9px;background:#43a047;color:#fff;border:none;border-radius:6px;cursor:pointer;font-family:var(--font);font-weight:700;font-size:13px;width:100%;}
+.save-btn:hover{background:#2e7d32;}
+.danger-btn{padding:9px;background:#e53935;color:#fff;border:none;border-radius:6px;cursor:pointer;font-family:var(--font);font-weight:700;font-size:13px;flex:1;}
+.danger-btn:hover{background:#c62828;}
+
+/* CARD EDIT FORM */
+#card-edit-modal .modal{max-width:460px;}
+.form-group{margin-bottom:12px;}
+.form-group label{display:block;font-size:12px;font-weight:700;color:var(--brand-dark);margin-bottom:4px;}
+.form-group input,.form-group textarea,.form-group select{width:100%;padding:7px 9px;border:1px solid #ccc;border-radius:6px;font-family:var(--font);font-size:13px;}
+.bullet-list{display:flex;flex-direction:column;gap:5px;margin-bottom:6px;}
+.bullet-row{display:flex;gap:5px;align-items:center;}
+.bullet-row input{flex:1;padding:5px 7px;border:1px solid #ccc;border-radius:4px;font-family:var(--font);font-size:12px;}
+
+/* REORDER MODAL */
+#reorder-modal .modal{max-width:480px;}
+.reorder-hint{font-size:12px;color:var(--text-sub);margin-bottom:12px;line-height:1.6;}
+#reorder-list{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;}
+.reorder-row{display:flex;align-items:center;gap:10px;background:#f5f7fb;border:1px solid #e0e5f0;border-radius:8px;padding:8px 10px;cursor:grab;transition:background .15s;}
+.reorder-row.dragging{opacity:.4;}
+.reorder-row:hover{background:#eef2fa;}
+.reorder-handle{color:#aab2c5;font-size:14px;flex-shrink:0;}
+.reorder-icon{font-size:17px;flex-shrink:0;}
+.reorder-title{flex:1;font-size:13px;color:var(--text-main);font-weight:700;}
+.reorder-btns{display:flex;gap:4px;flex-shrink:0;}
+.reorder-btns button{background:#fff;border:1px solid #ccc;border-radius:5px;width:26px;height:26px;font-size:12px;cursor:pointer;color:var(--brand-dark);}
+.reorder-btns button:hover:not(:disabled){background:var(--brand-accent);color:#fff;border-color:var(--brand-accent);}
+.reorder-btns button:disabled{opacity:.3;cursor:not-allowed;}
+
+/* IMAGE UPLOAD */
+.img-upload-area{border:2px dashed #90caf9;border-radius:8px;padding:16px;text-align:center;cursor:pointer;color:var(--text-sub);font-size:13px;margin-top:10px;}
+.img-upload-area:hover{border-color:var(--brand-accent);}
+.img-preview-list{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;}
+.img-thumb-wrap{position:relative;}
+.img-thumb-wrap img{width:80px;height:62px;object-fit:cover;border-radius:6px;border:1px solid #ddd;cursor:pointer;}
+.img-thumb-del{position:absolute;top:-5px;right:-5px;background:#e53935;color:#fff;border:none;border-radius:50%;width:16px;height:16px;font-size:11px;cursor:pointer;line-height:16px;text-align:center;padding:0;}
+
+/* ROTATION MODAL */
+#rotation-modal .modal{max-width:500px;}
+.rotation-member{display:flex;gap:6px;align-items:center;margin-bottom:6px;}
+.rotation-member input{flex:1;padding:6px 8px;border:1px solid #ccc;border-radius:4px;font-family:var(--font);font-size:13px;}
+
+/* TRANSLATE MODAL */
+#trans-modal .modal{max-width:640px;}
+.trans-area{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px;}
+.trans-box{display:flex;flex-direction:column;gap:6px;}
+.trans-box label{font-size:12px;font-weight:700;color:var(--brand-dark);}
+.trans-box textarea{padding:8px;border:1px solid #ccc;border-radius:6px;font-family:var(--font);font-size:13px;resize:vertical;min-height:120px;}
+.trans-lang-sel{padding:6px 8px;border:1px solid #ccc;border-radius:6px;font-family:var(--font);font-size:13px;background:#fff;}
+.trans-btn{padding:9px;background:var(--brand-accent);color:#fff;border:none;border-radius:6px;cursor:pointer;font-family:var(--font);font-weight:700;font-size:13px;width:100%;margin-top:10px;}
+.trans-btn:hover{background:var(--brand-hover);}
+.trans-notice{font-size:11px;color:var(--text-sub);margin-top:6px;text-align:center;}
+
+/* FOOTER */
+footer{text-align:center;padding:16px;font-size:11px;color:var(--text-sub);border-top:1px solid #dde1ec;margin-top:14px;}
+
+/* RESPONSIVE */
+@media(max-width:960px){.grid{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:560px){.grid{grid-template-columns:1fr;}header{padding:12px 14px;}.hdr-left h1{font-size:17px;}.trans-area{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="hdr-left">
+    <h1>🏭 鐵建　現場ポータルシステム</h1>
+    <p>教育・安全・品質管理を一つに。</p>
+  </div>
+  <div class="hdr-right">
+    <div class="hdr-info">
+      <div class="hdr-date" id="js-date"></div>
+      <div id="js-time"></div>
+      <div id="js-user" style="margin-top:2px;">👤 管理者</div>
+    </div>
+    <div class="hdr-btns">
+      <button class="hdr-btn" id="lang-btn" onclick="toggleLangBar()">🌐 言語</button>
+      <button class="hdr-btn" id="translate-btn" onclick="openModal('trans-modal')">✍️ 翻訳</button>
+      <button class="hdr-btn" id="reorder-btn" onclick="openReorderModal()">📐 メニュー並び替え</button>
+      <button class="hdr-btn" id="edit-toggle" onclick="toggleEditMode()">✏️ 編集</button>
+    </div>
+  </div>
+</header>
+
+<!-- LANG BAR -->
+<div id="lang-bar">
+  <span>表示言語：</span>
+  <button class="lang-pill active" onclick="setLang('ja')">🇯🇵 日本語</button>
+  <button class="lang-pill" onclick="setLang('vi')">🇻🇳 Tiếng Việt</button>
+  <button class="lang-pill" onclick="setLang('pt')">🇧🇷 Português</button>
+  <button class="lang-pill" onclick="setLang('my')">🇲🇲 မြန်မာ</button>
+  <span id="translate-status"></span>
+</div>
+
+<!-- WEATHER BAR -->
+<div id="weather-bar">
+  <div class="wx-item">
+    <span class="wx-label">📍 現在地</span>
+    <span class="wx-val" id="wx-location">取得中…</span>
+  </div>
+  <div class="wx-item">
+    <span class="wx-label">🌡️ 気温</span>
+    <span class="wx-val" id="wx-temp">—</span>
+  </div>
+  <div class="wx-item">
+    <span class="wx-label">💧 湿度</span>
+    <span class="wx-val" id="wx-hum">—</span>
+  </div>
+  <div class="wx-item">
+    <span class="wx-label">🌤️ 天気</span>
+    <span class="wx-val" id="wx-weather">—</span>
+  </div>
+  <div class="wx-item">
+    <span class="wx-label">⚠️ WBGT目安</span>
+    <span class="wx-val"><span id="wx-wbgt-val">—</span> <span class="wbgt-badge" id="wx-wbgt-badge"></span></span>
+  </div>
+  <span id="wx-update"></span>
+  <button id="wx-refresh" onclick="fetchWeather()">↻ 更新</button>
+</div>
+
+<!-- MAIN -->
+<div class="container">
+
+  <!-- お知らせ -->
+  <div class="notice">
+    <div class="notice-hdr">
+      <h2 id="notice-title">📢 本日のお知らせ</h2>
+    </div>
+    <ul id="notice-list"></ul>
+    <div class="add-notice-row">
+      <input type="text" id="new-notice-input" placeholder="新しいお知らせを入力…">
+      <button onclick="addNotice()">＋ 追加</button>
+    </div>
+  </div>
+
+  <div class="section-label" id="menu-label">各種機能メニュー</div>
+  <div class="grid" id="card-grid"></div>
+</div>
+
+<footer>© 2025 鐵建株式会社　現場ポータルシステム — 安全第一</footer>
+
+<!-- ===== MODALS ===== -->
+
+<!-- カード編集 -->
+<div class="modal-overlay" id="card-edit-modal">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>✏️ カードを編集</h3>
+      <button class="modal-close" onclick="closeModal('card-edit-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="edit-card-id">
+      <div class="form-group"><label>アイコン（絵文字）</label><input type="text" id="edit-icon" maxlength="4"></div>
+      <div class="form-group"><label>タイトル</label><input type="text" id="edit-title"></div>
+      <div class="form-group">
+        <label>説明（各行1項目）</label>
+        <div class="bullet-list" id="edit-bullets"></div>
+        <button class="add-row-btn" onclick="addBulletRow('')">＋ 項目追加</button>
+      </div>
+      <div class="form-group"><label>ステータス表示</label><input type="text" id="edit-status"></div>
+      <div class="form-group"><label>ステータス色</label>
+        <select id="edit-status-color">
+          <option value="ok">緑（正常）</option>
+          <option value="warn">オレンジ（注意）</option>
+          <option value="danger">赤（危険）</option>
+        </select>
+      </div>
+      <button class="save-btn" onclick="saveCardEdit()">💾 保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- セクション詳細 -->
+<div class="modal-overlay" id="section-modal">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="section-modal-title"></h3>
+      <div class="modal-head-btns">
+        <span id="section-translate-status" style="font-size:11px;color:#b0d4ff;"></span>
+        <button class="modal-close" onclick="closeModal('section-modal')">✕</button>
+      </div>
+    </div>
+    <div class="modal-body" id="section-modal-body"></div>
+  </div>
+</div>
+
+<!-- 朝礼ローテーション設定 -->
+<div class="modal-overlay" id="rotation-modal">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>👷 朝礼担当ローテーション設定</h3>
+      <button class="modal-close" onclick="closeModal('rotation-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:var(--text-sub);margin-bottom:14px;">メンバーリストを登録すると、曜日順に自動でローテーションします。</p>
+      <div id="rotation-members"></div>
+      <button class="add-row-btn" onclick="addRotationMember()">＋ メンバー追加</button>
+      <button class="save-btn" onclick="saveRotation()">💾 保存してローテーション更新</button>
+    </div>
+  </div>
+</div>
+
+<!-- 翻訳モーダル -->
+<div class="modal-overlay" id="trans-modal">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>✍️ テキスト翻訳</h3>
+      <button class="modal-close" onclick="closeModal('trans-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:var(--text-sub);">日本語から各言語へ翻訳します（MyMemory無料APIを使用）。</p>
+      <div class="trans-area">
+        <div class="trans-box">
+          <label>🇯🇵 日本語（原文）</label>
+          <textarea id="trans-src" placeholder="ここに日本語を入力…"></textarea>
+        </div>
+        <div class="trans-box">
+          <label>翻訳先言語</label>
+          <select class="trans-lang-sel" id="trans-lang-sel">
+            <option value="vi">🇻🇳 ベトナム語</option>
+            <option value="pt">🇧🇷 ポルトガル語</option>
+            <option value="my">🇲🇲 ミャンマー語</option>
+            <option value="en">🇺🇸 英語</option>
+          </select>
+          <textarea id="trans-dst" placeholder="翻訳結果がここに表示されます…" readonly style="margin-top:8px;background:#f9f9f9;"></textarea>
+        </div>
+      </div>
+      <button class="trans-btn" onclick="doTranslate()">🌐 翻訳する</button>
+      <p class="trans-notice">※ MyMemory無料APIを使用（1日約1000文字まで）。長文はGoogle翻訳をご利用ください。</p>
+      <button class="add-row-btn" style="margin-top:8px;width:100%;text-align:center;" onclick="openGoogleTranslate()">🔗 Google翻訳で開く</button>
+    </div>
+  </div>
+</div>
+
+<!-- メニュー並び替え -->
+<div class="modal-overlay" id="reorder-modal">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>📐 機能メニューの並び替え</h3>
+      <button class="modal-close" onclick="closeModal('reorder-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <p class="reorder-hint">▲▼ボタンで順番を入れ替えられます（PCではドラッグでも移動できます）。並び終えたら「保存」を押してください。</p>
+      <div id="reorder-list"></div>
+      <button class="save-btn" onclick="saveReorder()">💾 この順番で保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- 確認ダイアログ（削除など） -->
+<div class="modal-overlay" id="confirm-modal">
+  <div class="modal" style="max-width:360px;">
+    <div class="modal-head">
+      <h3>⚠️ 確認</h3>
+      <button class="modal-close" onclick="closeModal('confirm-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <p id="confirm-message" style="font-size:14px;color:var(--text-main);margin-bottom:18px;line-height:1.6;"></p>
+      <div style="display:flex;gap:8px;">
+        <button class="add-row-btn" style="flex:1;margin-top:0;" onclick="closeModal('confirm-modal')">キャンセル</button>
+        <button class="danger-btn" id="confirm-ok-btn">削除する</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =====================================================
+   DEFAULT DATA
+   ===================================================== */
+const DEFAULT = {
+  notices:[
+    "本日の朝礼担当は自動計算されます。",
+    "校正・資格の期限は自動チェックされます。"
+  ],
+  cards:[
+    {id:"hiyari",icon:"⚠️",title:"ヒヤリハット & 安全掲示板",bullets:["危険箇所・修正要求の共有","写真付き投稿・改善記録","過去事例の検索・閲覧"],status:"今月の投稿：3件 ／ 対応中：1件",statusColor:"warn"},
+    {id:"manual",icon:"📹",title:"作業マニュアル",bullets:["工具・機械の動画マニュアル","PDF手順書の閲覧・ダウンロード","最新改訂版を常時公開"],status:"公開中：12件",statusColor:"ok"},
+    {id:"calibration",icon:"📅",title:"校正スケジュール管理",bullets:["検査器具・測定機器の校正期限","期限切れアラート自動表示","校正履歴の記録"],status:"自動チェック中",statusColor:"ok"},
+    {id:"defect",icon:"🛠️",title:"製造ミス共有",bullets:["製造不良・溶接ミスの記録","原因・対策・再発防止策","不良写真の登録・共有"],status:"今月の記録：5件",statusColor:"warn"},
+    {id:"morning",icon:"👷",title:"朝礼",bullets:["本日の作業予定・配置確認","安全目標・危険ポイント確認","朝礼担当ローテーション自動計算"],status:"本日担当：自動計算中",statusColor:"ok"},
+    {id:"heat",icon:"🌡️",title:"熱中症チェック",bullets:["気温・WBGT自動取得（Open-Meteo）","体調確認チェックシート","水分補給の記録"],status:"気象データ取得中",statusColor:"ok"},
+    {id:"license",icon:"📋",title:"資格管理",bullets:["玉掛け・クレーン・溶接資格","更新期限自動アラート","資格証コピーの保管"],status:"自動チェック中",statusColor:"ok"},
+    {id:"tool",icon:"🔧",title:"工具貸出管理",bullets:["工具の使用者・場所の確認","返却状況のリアルタイム管理","紛失・不具合の報告"],status:"貸出中：4点",statusColor:"warn"},
+    {id:"board",icon:"📣",title:"みんなの掲示板（Good & Thanks）",bullets:["良かったこと・助けてもらった話を投稿","写真付きで気軽にシェア","😊🙏👏でリアクションできる"],status:"投稿数：2件",statusColor:"ok"},
+    {id:"improve",icon:"💡",title:"改善提案箱",bullets:["「もっとこうしたら良くなる」を匿名で投稿","状態は検討中→採用／見送りで管理","採用された提案は現場に反映"],status:"提案数：2件（採用：1件）",statusColor:"ok"}
+  ],
+  sections:{
+    hiyari:{desc:"現場で気づいた危険箇所・ヒヤリとした体験を記録・共有します。小さな気づきが大きな事故を防ぎます。",cols:["日付","場所","内容","状態"],colTypes:["text","text","textarea","badge"],rows:[["2025/07/08","第一工場 通路","スリングベルトが床に放置されており、つまずきそうになった","ok:対応済"],["2025/07/05","溶接エリア","換気扇の停止を気づかず溶接を開始、煙充満","warn:対応中"]],images:[]},
+    manual:{desc:"工具・機械の正しい使い方を動画と手順書で確認できます。作業前に必ず確認してください。",cols:["マニュアル名","種別","更新日","リンク"],colTypes:["text","text","text","text"],rows:[["グラインダー安全作業手順","📄 PDF","2025/06/01",""],["溶接機セッティング手順（TIG）","🎬 動画","2025/05/20",""],["クレーン玉掛け作業手順","📄 PDF","2025/04/15",""]],images:[]},
+    calibration:{desc:"検査器具・測定機器の校正期限を管理します。赤表示の器具は使用を停止し、速やかに校正を実施してください。",cols:["器具名","最終校正日","次回期限","状態"],colTypes:["text","text","text","badge"],rows:[["超音波厚み計 UT-01","2024/07/10","2025/07/10","danger:期限切れ"],["デジタルノギス DN-03","2025/05/01","2025/08/01","warn:30日以内"],["トルクレンチ TW-200","2025/06/01","2025/09/01","warn:30日以内"],["マイクロメーター MM-02","2025/03/15","2026/03/15","ok:正常"]],images:[]},
+    defect:{desc:"製造・溶接ミスを記録し、原因と対策を全員で共有します。再発防止のための情報として活用してください。",cols:["日付","不良内容","原因","対策"],colTypes:["text","textarea","textarea","textarea"],rows:[["2025/07/03","溶接ビード不整（アンダーカット）","電流値の設定ミス","作業前の電流確認チェックを必須化"],["2025/06/25","穴位置ズレ（±3mm超）","図面の旧版を使用","図面は最新版のみ使用・旧版を回収"]],images:[]},
+    morning:{desc:"本日の作業内容・安全目標・朝礼担当を確認します。担当はローテーションに基づき自動計算されます。",cols:["項目","内容"],colTypes:["text","textarea"],rows:[["朝礼担当","（自動計算）"],["安全目標（本日）","「急がず・焦らず・確認してから」熱中症・落下物に注意"],["本日の作業予定","第一工場：H鋼柱 溶接仕上げ\n第二工場：ブラケット穴あけ・バリ取り"],["危険ポイント","午後のクレーン点検中は立入禁止エリアに注意"],["次回朝礼担当","（自動計算）"]],images:[]},
+    heat:{desc:"気温・湿度・WBGTはOpen-Meteo APIで自動取得します。体調チェックも記録してください。",cols:["項目","内容"],colTypes:["text","textarea"],rows:[["本日の最高気温","API自動取得"],["WBGT（暑さ指数）","API自動計算\n（25未満:安全 / 25-28:注意 / 28-31:警戒 / 31以上:危険）"],["水分補給の目安","作業中は20〜30分に1回（コップ1杯約200ml）"],["体調チェック（本日）","全員異常なし"]],images:[]},
+    license:{desc:"社員の保有資格と更新期限を管理します。期限が近い資格（60日以内）は自動でお知らせ欄に表示されます。",cols:["氏名","資格名","取得日","有効期限","状態"],colTypes:["text","text","text","text","badge"],rows:[["山田 一郎","玉掛け技能講習","2019/04/10","（無期限）","ok:有効"],["鈴木 健二","溶接技能者（JIS WES）","2023/06/01","2025/08/15","warn:60日以内"],["佐藤 誠","フォークリフト運転技能","2022/10/20","2025/09/01","warn:60日以内"],["田中 太郎","クレーン運転士（5t未満）","2021/03/15","（無期限）","ok:有効"]],images:[]},
+    tool:{desc:"工具の貸出・返却状況を記録します。使用後は必ず当日中に返却してください。",cols:["工具名","使用者","貸出日","返却予定","状態"],colTypes:["text","text","text","text","badge"],rows:[["トルクレンチ 200Nm","山田 一郎","2025/07/07","2025/07/08","ok:使用中"],["グラインダー #2","鈴木 健二","2025/07/08","2025/07/08","ok:使用中"],["デジタル水平器","佐藤 誠","2025/07/01","2025/07/03","danger:未返却（超過）"]],images:[]},
+    board:{desc:"良かったこと・助けてもらったことを自由に投稿してください。投稿には😊🙏👏でリアクションできます。"},
+    improve:{desc:"「もっとこうしたら現場が良くなる」というアイデアを匿名で投稿できます。氏名の入力欄はありません。会社で検討のうえ、状態を更新します。採用された提案は現場に反映されます。",cols:["提出日","改善提案の内容","状態","会社からのコメント"],colTypes:["text","textarea","badge","textarea"],rows:[["2025/06/20","溶接エリアの換気扇に「使用中」の札を掛けて、消し忘れに気づきやすくしてほしい","ok:採用","2025/06/25より導入。危険予知の観点からも有効なため即採用としました。"],["2025/06/28","工具置き場に写真付きの定位置表示（写真管理板）を設置してほしい","warn:検討中","来月の安全会議で予算含め検討します。"]],images:[]}
+  },
+  rotation:{members:["山田 一郎","鈴木 健二","佐藤 誠","田中 太郎"],startDate:"2025/07/07"},
+  board:[
+    {id:"seed1",author:"鈴木 健二",text:"クレーンの玉掛け、佐藤さんに手伝ってもらって助かりました！おかげで時間内に終わりました。",image:null,time:"2026/07/01 16:20",reactions:{smile:2,thanks:3,nice:1}},
+    {id:"seed2",author:"田中 太郎",text:"新しく入った後輩が積極的に清掃してくれて助かりました。見習いたいです。",image:null,time:"2026/07/02 08:05",reactions:{smile:4,thanks:0,nice:2}}
+  ]
+};
+
+/* =====================================================
+   I18N ラベル（UI文字列）
+   ===================================================== */
+const I18N = {
+  ja:{noticeTitle:"📢 本日のお知らせ",menuLabel:"各種機能メニュー",openBtn:"開く",editBtn:"✏️ 編集",editMode:"✏️ 編集",editEnd:"✅ 編集終了",langBtn:"🌐 言語",transBtn:"✍️ 翻訳",saveBtn:"💾 保存",addRow:"＋ 行を追加",addNotice:"＋ 追加",wxLocation:"現在地",wxTemp:"気温",wxHum:"湿度",wxWeather:"天気",wxWbgt:"WBGT目安",wxRefresh:"↻ 更新",footer:"© 2025 鐵建株式会社　現場ポータルシステム — 安全第一"},
+  vi:{noticeTitle:"📢 Thông báo hôm nay",menuLabel:"Menu chức năng",openBtn:"Mở",editBtn:"✏️ Sửa",editMode:"✏️ Chỉnh sửa",editEnd:"✅ Kết thúc",langBtn:"🌐 Ngôn ngữ",transBtn:"✍️ Dịch",saveBtn:"💾 Lưu",addRow:"＋ Thêm hàng",addNotice:"＋ Thêm",wxLocation:"Vị trí",wxTemp:"Nhiệt độ",wxHum:"Độ ẩm",wxWeather:"Thời tiết",wxWbgt:"Chỉ số WBGT",wxRefresh:"↻ Làm mới",footer:"© 2025 Tekken Corporation — An toàn trên hết"},
+  pt:{noticeTitle:"📢 Avisos de hoje",menuLabel:"Menu de funções",openBtn:"Abrir",editBtn:"✏️ Editar",editMode:"✏️ Editar",editEnd:"✅ Concluir",langBtn:"🌐 Idioma",transBtn:"✍️ Traduzir",saveBtn:"💾 Salvar",addRow:"＋ Adicionar linha",addNotice:"＋ Adicionar",wxLocation:"Local",wxTemp:"Temperatura",wxHum:"Umidade",wxWeather:"Clima",wxWbgt:"Índice WBGT",wxRefresh:"↻ Atualizar",footer:"© 2025 Tekken Corporation — Segurança em primeiro lugar"},
+  my:{noticeTitle:"📢 ယနေ့သတိပေးချက်",menuLabel:"လုပ်ငန်းစဉ်မီနူး",openBtn:"ဖွင့်ရန်",editBtn:"✏️ တည်းဖြတ်",editMode:"✏️ တည်းဖြတ်",editEnd:"✅ ပြီးဆုံး",langBtn:"🌐 ဘာသာစကား",transBtn:"✍️ ဘာသာပြန်",saveBtn:"💾 သိမ်းဆည်း",addRow:"＋ တန်းထပ်ထည့်",addNotice:"＋ ထည့်သည်",wxLocation:"တည်နေရာ",wxTemp:"အပူချိန်",wxHum:"စိုထိုင်းဆ",wxWeather:"မိုးလေဝသ",wxWbgt:"WBGT ညွှန်းကိန်း",wxRefresh:"↻ ပြောင်းလဲ",footer:"© 2025 Tekken ကုမ္ပဏီ — ဘေးကင်းရေးကို ဦးစားပေးသည်"}
+};
+
+/* =====================================================
+   STATE
+   ===================================================== */
+let isEditMode=false;
+let currentLang='ja';
+let appData=loadData();
+let wxData=null;
+
+function loadData(){
+  try{const s=localStorage.getItem('tekken_v3');return s?JSON.parse(s):JSON.parse(JSON.stringify(DEFAULT));}
+  catch(e){return JSON.parse(JSON.stringify(DEFAULT));}
+}
+function saveData(){localStorage.setItem('tekken_v3',JSON.stringify(appData));}
+
+/* 既存データに掲示板機能・改善提案箱がなければ追加（旧バージョンからの移行対応） */
+(function migrateBoard(){
+  let changed=false;
+  if(!appData.board){appData.board=[];changed=true;}
+  if(!appData.cards.find(c=>c.id==='board')){
+    appData.cards.push({id:"board",icon:"📣",title:"みんなの掲示板（Good & Thanks）",bullets:["良かったこと・助けてもらった話を投稿","写真付きで気軽にシェア","😊🙏👏でリアクションできる"],status:`投稿数：${appData.board.length}件`,statusColor:"ok"});
+    changed=true;
+  }
+  if(!appData.sections.board){
+    appData.sections.board={desc:"良かったこと・助けてもらったことを自由に投稿してください。投稿には😊🙏👏でリアクションできます。"};
+    changed=true;
+  }
+  if(!appData.sections.improve){
+    appData.sections.improve={desc:"「もっとこうしたら現場が良くなる」というアイデアを匿名で投稿できます。氏名の入力欄はありません。会社で検討のうえ、状態を更新します。採用された提案は現場に反映されます。",cols:["提出日","改善提案の内容","状態","会社からのコメント"],colTypes:["text","textarea","badge","textarea"],rows:[],images:[]};
+    changed=true;
+  }
+  if(!appData.cards.find(c=>c.id==='improve')){
+    const rows=appData.sections.improve.rows||[];
+    const adopted=rows.filter(r=>(r[2]||'').startsWith('ok')).length;
+    appData.cards.push({id:"improve",icon:"💡",title:"改善提案箱",bullets:["「もっとこうしたら良くなる」を匿名で投稿","状態は検討中→採用／見送りで管理","採用された提案は現場に反映"],status:`提案数：${rows.length}件（採用：${adopted}件）`,statusColor:"ok"});
+    changed=true;
+  }
+  if(changed) saveData();
+})();
+
+/* =====================================================
+   CLOCK
+   ===================================================== */
+function updateClock(){
+  const now=new Date();
+  const w=['日','月','火','水','木','金','土'][now.getDay()];
+  document.getElementById('js-date').textContent=`${now.getFullYear()}年${p2(now.getMonth()+1)}月${p2(now.getDate())}日（${w}）`;
+  document.getElementById('js-time').textContent=`${p2(now.getHours())}:${p2(now.getMinutes())}`;
+}
+function p2(n){return String(n).padStart(2,'0');}
+updateClock();setInterval(updateClock,1000);
+
+/* =====================================================
+   WEATHER — Open-Meteo（無料・登録不要）
+   ===================================================== */
+const WX_CODES={0:'☀️ 快晴',1:'🌤️ 晴れ',2:'⛅ 曇り',3:'☁️ 曇天',45:'🌫️ 霧',48:'🌫️ 霧',51:'🌦️ 霧雨',53:'🌦️ 霧雨',55:'🌦️ 霧雨',61:'🌧️ 小雨',63:'🌧️ 雨',65:'🌧️ 大雨',71:'❄️ 小雪',73:'❄️ 雪',75:'❄️ 大雪',80:'🌧️ にわか雨',81:'🌧️ にわか雨',82:'⛈️ 激しい雨',95:'⛈️ 雷雨',99:'⛈️ 雷雨'};
+// 高崎市の座標（工場の実際の位置に変更可能）
+const SITE_LAT=36.3219,SITE_LON=139.0033,SITE_NAME='高崎市（群馬）';
+
+function wbgtFromTempHum(t,h){
+  // 簡易WBGT推定式（屋外日射あり）
+  return Math.round((0.735*t)+(0.0374*h)+(0.00292*t*h)+(7.619)-(4.557*(t**2)/1000)-(0.0572*h)-4.064);
+}
+function wbgtLevel(w){
+  if(w<21) return{cls:'wbgt-safe',label:'ほぼ安全'};
+  if(w<25) return{cls:'wbgt-safe',label:'注意'};
+  if(w<28) return{cls:'wbgt-caution',label:'⚠️ 警戒'};
+  if(w<31) return{cls:'wbgt-warning',label:'🔴 厳重警戒'};
+  return{cls:'wbgt-danger',label:'🚨 危険'};
+}
+
+async function fetchWeather(){
+  document.getElementById('wx-location').textContent=SITE_NAME;
+  document.getElementById('wx-update').textContent='取得中…';
+  try{
+    const url=`https://api.open-meteo.com/v1/forecast?latitude=${SITE_LAT}&longitude=${SITE_LON}&current=temperature_2m,relative_humidity_2m,weathercode,apparent_temperature&hourly=temperature_2m,relative_humidity_2m&timezone=Asia%2FTokyo&forecast_days=1`;
+    const res=await fetch(url);
+    const json=await res.json();
+    const c=json.current;
+    const temp=c.temperature_2m;
+    const hum=c.relative_humidity_2m;
+    const code=c.weathercode;
+    const wbgt=wbgtFromTempHum(temp,hum);
+    const lv=wbgtLevel(wbgt);
+    wxData={temp,hum,code,wbgt,lv};
+
+    document.getElementById('wx-temp').textContent=`${temp}℃`;
+    document.getElementById('wx-hum').textContent=`${hum}%`;
+    document.getElementById('wx-weather').textContent=WX_CODES[code]||'—';
+    document.getElementById('wx-wbgt-val').textContent=`${wbgt}℃`;
+    const badge=document.getElementById('wx-wbgt-badge');
+    badge.textContent=lv.label;badge.className=`wbgt-badge ${lv.cls}`;
+    const now=new Date();
+    document.getElementById('wx-update').textContent=`最終更新: ${p2(now.getHours())}:${p2(now.getMinutes())}`;
+
+    // 熱中症カードのステータスを自動更新
+    updateHeatCard(temp,wbgt,lv);
+    // 熱中症セクションデータを自動更新
+    updateHeatSection(temp,hum,wbgt,lv,WX_CODES[code]||'—');
+    // アラート通知
+    autoAlerts();
+  }catch(e){
+    document.getElementById('wx-update').textContent='取得失敗（ネットワーク確認）';
+  }
+}
+
+function updateHeatCard(temp,wbgt,lv){
+  const card=appData.cards.find(c=>c.id==='heat');
+  if(!card) return;
+  card.status=`気温:${temp}℃ / WBGT:${wbgt}℃ ${lv.label}`;
+  card.statusColor=wbgt>=31?'danger':wbgt>=28?'warn':'ok';
+  saveData();renderCards();
+}
+
+function updateHeatSection(temp,hum,wbgt,lv,wxStr){
+  const sec=appData.sections['heat'];
+  if(!sec) return;
+  sec.rows[0][1]=`${temp}℃ （${wxStr}）`;
+  sec.rows[1][1]=`${wbgt}℃ ${lv.label}\n（25未満:安全 / 25-28:注意 / 28-31:警戒 / 31以上:危険）`;
+  saveData();
+}
+
+/* =====================================================
+   AUTO ALERTS — 校正・資格期限チェック
+   ===================================================== */
+function autoAlerts(){
+  const today=new Date();today.setHours(0,0,0,0);
+  const alerts=[];
+
+  // 校正期限
+  (appData.sections['calibration']?.rows||[]).forEach(row=>{
+    const name=row[0],dateStr=row[2],badge=row[3]||'';
+    const d=parseDate(dateStr);if(!d) return;
+    const diff=Math.floor((d-today)/(1000*60*60*24));
+    if(diff<0) alerts.push(`🔴 【校正期限切れ】${name}（期限: ${dateStr}）`);
+    else if(diff<=30) alerts.push(`🟠 【校正期限30日以内】${name}（あと${diff}日 / ${dateStr}）`);
+  });
+
+  // 資格期限
+  (appData.sections['license']?.rows||[]).forEach(row=>{
+    const name=row[0],skill=row[1],dateStr=row[3];
+    const d=parseDate(dateStr);if(!d) return;
+    const diff=Math.floor((d-today)/(1000*60*60*24));
+    if(diff<0) alerts.push(`🔴 【資格期限切れ】${name}：${skill}（期限: ${dateStr}）`);
+    else if(diff<=60) alerts.push(`🟠 【資格更新60日以内】${name}：${skill}（あと${diff}日）`);
+  });
+
+  // WBGT警告
+  if(wxData&&wxData.wbgt>=28) alerts.push(`🌡️ 【熱中症警戒】現在のWBGT:${wxData.wbgt}℃ — 水分補給・休憩を徹底してください`);
+
+  // 既存の自動アラート行を消して再追加
+  appData.notices=appData.notices.filter(n=>!n.startsWith('🔴')&&!n.startsWith('🟠')&&!n.startsWith('🌡️'));
+  appData.notices=[...alerts,...appData.notices];
+  saveData();renderNotices();
+
+  // 朝礼担当を自動更新
+  updateMorningDuty();
+}
+
+function parseDate(str){
+  if(!str||str.includes('無期限')||str.includes('自動')) return null;
+  const m=str.match(/(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
+  if(!m) return null;
+  return new Date(Number(m[1]),Number(m[2])-1,Number(m[3]));
+}
+
+/* =====================================================
+   ROTATION — 朝礼担当自動計算
+   ===================================================== */
+function getTodayDuty(){
+  const members=appData.rotation?.members||[];
+  if(!members.length) return '（未設定）';
+  const start=parseDate(appData.rotation?.startDate)||new Date('2025/07/07');
+  const today=new Date();today.setHours(0,0,0,0);
+  const days=Math.floor((today-start)/(1000*60*60*24));
+  const idx=((days%members.length)+members.length)%members.length;
+  return members[idx];
+}
+function getNextDuty(){
+  const members=appData.rotation?.members||[];
+  if(!members.length) return '（未設定）';
+  const start=parseDate(appData.rotation?.startDate)||new Date('2025/07/07');
+  const today=new Date();today.setHours(0,0,0,0);
+  const days=Math.floor((today-start)/(1000*60*60*24))+1;
+  const idx=((days%members.length)+members.length)%members.length;
+  return members[idx];
+}
+
+function updateMorningDuty(){
+  const duty=getTodayDuty();
+  const next=getNextDuty();
+  // カードステータス更新
+  const card=appData.cards.find(c=>c.id==='morning');
+  if(card){card.status=`本日担当：${duty}`;saveData();renderCards();}
+  // セクションデータ更新
+  const sec=appData.sections['morning'];
+  if(sec){
+    if(sec.rows[0]) sec.rows[0][1]=duty;
+    if(sec.rows[sec.rows.length-1]&&sec.rows[sec.rows.length-1][0]==='次回朝礼担当') sec.rows[sec.rows.length-1][1]=next;
+    saveData();
+  }
+}
+
+/* ローテーション設定モーダル */
+function openRotationSettings(){
+  const members=appData.rotation?.members||[];
+  const el=document.getElementById('rotation-members');
+  el.innerHTML='';
+  members.forEach((m,i)=>{
+    const row=document.createElement('div');row.className='rotation-member';
+    row.innerHTML=`<input type="text" value="${escH(m)}" placeholder="氏名">
+      <button class="row-del" onclick="this.parentElement.remove()">✕</button>`;
+    el.appendChild(row);
+  });
+  openModal('rotation-modal');
+}
+function addRotationMember(){
+  const el=document.getElementById('rotation-members');
+  const row=document.createElement('div');row.className='rotation-member';
+  row.innerHTML=`<input type="text" placeholder="氏名"><button class="row-del" onclick="this.parentElement.remove()">✕</button>`;
+  el.appendChild(row);
+}
+function saveRotation(){
+  const inputs=document.querySelectorAll('#rotation-members input');
+  appData.rotation.members=Array.from(inputs).map(i=>i.value.trim()).filter(Boolean);
+  appData.rotation.startDate=new Date().toLocaleDateString('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit'}).replace(/\//g,'/');
+  saveData();updateMorningDuty();closeModal('rotation-modal');alert('✅ ローテーションを更新しました');
+}
+
+/* =====================================================
+   LANGUAGE / TRANSLATE
+   ===================================================== */
+function toggleLangBar(){
+  document.getElementById('lang-bar').classList.toggle('show');
+}
+
+function setLang(lang){
+  currentLang=lang;
+  document.querySelectorAll('.lang-pill').forEach(b=>b.classList.remove('active'));
+  event.target.classList.add('active');
+  const L=I18N[lang]||I18N.ja;
+  document.getElementById('notice-title').textContent=L.noticeTitle;
+  document.getElementById('menu-label').textContent=L.menuLabel;
+  document.getElementById('edit-toggle').textContent=isEditMode?L.editEnd:L.editMode;
+  document.getElementById('lang-btn').textContent=L.langBtn;
+  document.getElementById('translate-btn').textContent=L.transBtn;
+  document.querySelector('footer').textContent=L.footer;
+  renderCards();renderNotices();
+  if(lang!=='ja') translateUI(lang);
+}
+
+// ページUI全体を翻訳（天気バーラベルなど）
+async function translateUI(lang){
+  // 気象バーラベルのみシンプルに差し替え（I18Nから）
+  const L=I18N[lang]||I18N.ja;
+  const els={
+    'wx-location':SITE_NAME
+  };
+}
+
+/* テキスト翻訳（MyMemory API） */
+async function doTranslate(){
+  const src=document.getElementById('trans-src').value.trim();
+  if(!src){alert('翻訳するテキストを入力してください');return;}
+  const targetLang=document.getElementById('trans-lang-sel').value;
+  const dst=document.getElementById('trans-dst');
+  dst.value='翻訳中…';
+  const langPair=`ja|${targetLang}`;
+  try{
+    const url=`https://api.mymemory.translated.net/get?q=${encodeURIComponent(src)}&langpair=${langPair}`;
+    const res=await fetch(url);
+    const json=await res.json();
+    if(json.responseStatus===200){
+      dst.value=json.responseData.translatedText;
+    }else{
+      dst.value='翻訳できませんでした。Google翻訳をお試しください。';
+    }
+  }catch(e){
+    dst.value='ネットワークエラー。Google翻訳をお試しください。';
+  }
+}
+
+function openGoogleTranslate(){
+  const src=document.getElementById('trans-src').value.trim()||'';
+  const lang=document.getElementById('trans-lang-sel').value;
+  window.open(`https://translate.google.com/?sl=ja&tl=${lang}&text=${encodeURIComponent(src)}&op=translate`,'_blank');
+}
+
+/* =====================================================
+   NOTICE
+   ===================================================== */
+function renderNotices(){
+  const ul=document.getElementById('notice-list');
+  ul.innerHTML='';
+  appData.notices.forEach((txt,i)=>{
+    const li=document.createElement('li');
+    const isAuto=txt.startsWith('🔴')||txt.startsWith('🟠')||txt.startsWith('🌡️');
+    if(isAuto) li.className='auto-alert';
+    li.innerHTML=`<span class="notice-text">${escH(txt)}</span>
+      <button class="del-btn" onclick="deleteNotice(${i})">✕</button>`;
+    const span=li.querySelector('.notice-text');
+    span.addEventListener('click',()=>{if(!isEditMode||isAuto) return;span.contentEditable='true';span.focus();});
+    span.addEventListener('blur',()=>{span.contentEditable='false';appData.notices[i]=span.textContent.trim();saveData();});
+    ul.appendChild(li);
+  });
+}
+function addNotice(){
+  const inp=document.getElementById('new-notice-input');
+  const v=inp.value.trim();if(!v) return;
+  appData.notices.push(v);saveData();renderNotices();inp.value='';
+}
+function deleteNotice(i){
+  showConfirm('このお知らせを削除しますか？',()=>{
+    appData.notices.splice(i,1);saveData();renderNotices();
+  });
+}
+document.getElementById('new-notice-input').addEventListener('keydown',e=>{if(e.key==='Enter') addNotice();});
+
+/* =====================================================
+   CARDS
+   ===================================================== */
+function renderCards(){
+  const L=I18N[currentLang]||I18N.ja;
+  const grid=document.getElementById('card-grid');
+  grid.innerHTML='';
+  appData.cards.forEach(card=>{
+    const div=document.createElement('div');
+    div.className='card';
+    div.onclick=e=>{if(e.target.closest('.card-edit-btn')) return;openSection(card.id);};
+    // 朝礼カードにはローテーション設定ボタンも追加
+    const extraBtn=card.id==='morning'?`<button class="card-edit-btn" style="right:70px;" onclick="event.stopPropagation();openRotationSettings()">👥 担当設定</button>`:'';
+    div.innerHTML=`
+      ${extraBtn}
+      <button class="card-edit-btn" onclick="openCardEdit('${card.id}')">✏️ ${L.editBtn.replace('✏️ ','')}</button>
+      <div class="card-head"><span class="icon">${card.icon}</span><h2>${escH(card.title)}</h2></div>
+      <div class="card-body"><ul>${card.bullets.map(b=>`<li>${escH(b)}</li>`).join('')}</ul></div>
+      <div class="card-foot">
+        <div class="card-status"><span class="dot dot-${card.statusColor}"></span>${escH(card.status)}</div>
+        <button class="btn">${L.openBtn}</button>
+      </div>`;
+    grid.appendChild(div);
+  });
+}
+
+/* =====================================================
+   CARD EDIT MODAL
+   ===================================================== */
+function openCardEdit(id){
+  const card=appData.cards.find(c=>c.id===id);if(!card) return;
+  document.getElementById('edit-card-id').value=id;
+  document.getElementById('edit-icon').value=card.icon;
+  document.getElementById('edit-title').value=card.title;
+  document.getElementById('edit-status').value=card.status;
+  document.getElementById('edit-status-color').value=card.statusColor;
+  const bl=document.getElementById('edit-bullets');bl.innerHTML='';
+  card.bullets.forEach(b=>addBulletRow(b));
+  openModal('card-edit-modal');
+}
+function addBulletRow(val=''){
+  const bl=document.getElementById('edit-bullets');
+  const row=document.createElement('div');row.className='bullet-row';
+  row.innerHTML=`<input type="text" value="${escA(val)}" placeholder="項目を入力">
+    <button class="row-del" onclick="this.parentElement.remove()">✕</button>`;
+  bl.appendChild(row);
+}
+function saveCardEdit(){
+  const id=document.getElementById('edit-card-id').value;
+  const card=appData.cards.find(c=>c.id===id);if(!card) return;
+  card.icon=document.getElementById('edit-icon').value.trim()||card.icon;
+  card.title=document.getElementById('edit-title').value.trim();
+  card.status=document.getElementById('edit-status').value.trim();
+  card.statusColor=document.getElementById('edit-status-color').value;
+  card.bullets=Array.from(document.querySelectorAll('#edit-bullets .bullet-row input')).map(i=>i.value.trim()).filter(Boolean);
+  saveData();renderCards();closeModal('card-edit-modal');
+}
+
+/* =====================================================
+   REORDER — 機能メニューの並び替え
+   ===================================================== */
+let reorderWorking=null;
+
+function openReorderModal(){
+  reorderWorking=appData.cards.map(c=>c.id);
+  renderReorderList();
+  openModal('reorder-modal');
+}
+
+function renderReorderList(){
+  const list=document.getElementById('reorder-list');
+  list.innerHTML='';
+  reorderWorking.forEach((id,idx)=>{
+    const card=appData.cards.find(c=>c.id===id);
+    if(!card) return;
+    const row=document.createElement('div');
+    row.className='reorder-row';
+    row.draggable=true;
+    row.innerHTML=`
+      <span class="reorder-handle">⠿</span>
+      <span class="reorder-icon">${card.icon}</span>
+      <span class="reorder-title">${escH(card.title)}</span>
+      <div class="reorder-btns">
+        <button ${idx===0?'disabled':''} onclick="moveReorder(${idx},-1)">▲</button>
+        <button ${idx===reorderWorking.length-1?'disabled':''} onclick="moveReorder(${idx},1)">▼</button>
+      </div>`;
+    row.addEventListener('dragstart',e=>{e.dataTransfer.setData('text/plain',String(idx));row.classList.add('dragging');});
+    row.addEventListener('dragend',()=>row.classList.remove('dragging'));
+    row.addEventListener('dragover',e=>e.preventDefault());
+    row.addEventListener('drop',e=>{
+      e.preventDefault();
+      const fromIdx=Number(e.dataTransfer.getData('text/plain'));
+      if(Number.isNaN(fromIdx)||fromIdx===idx) return;
+      const[moved]=reorderWorking.splice(fromIdx,1);
+      reorderWorking.splice(idx,0,moved);
+      renderReorderList();
+    });
+    list.appendChild(row);
+  });
+}
+
+function moveReorder(idx,dir){
+  const newIdx=idx+dir;
+  if(newIdx<0||newIdx>=reorderWorking.length) return;
+  [reorderWorking[idx],reorderWorking[newIdx]]=[reorderWorking[newIdx],reorderWorking[idx]];
+  renderReorderList();
+}
+
+function saveReorder(){
+  const newCards=reorderWorking.map(id=>appData.cards.find(c=>c.id===id)).filter(Boolean);
+  appData.cards=newCards;
+  saveData();renderCards();closeModal('reorder-modal');
+  alert('✅ 並び順を保存しました');
+}
+
+/* =====================================================
+   SECTION DETAIL MODAL
+   ===================================================== */
+function openSection(id){
+  const card=appData.cards.find(c=>c.id===id);
+  const sec=appData.sections[id];
+  if(!card||!sec) return;
+  document.getElementById('section-modal-title').textContent=`${card.icon} ${card.title}`;
+  const body=document.getElementById('section-modal-body');
+  body.innerHTML='';
+
+  const descEl=document.createElement('p');descEl.className='modal-desc';descEl.textContent=sec.desc;
+  if(isEditMode){descEl.contentEditable='true';descEl.title='クリックして編集';}
+  descEl.addEventListener('blur',()=>{sec.desc=descEl.textContent.trim();saveData();});
+  body.appendChild(descEl);
+
+  const L=I18N[currentLang]||I18N.ja;
+
+  // 掲示板セクションは専用UIを表示して以降の共通処理はスキップ
+  if(id==='board'){
+    renderBoard(body);
+    openModal('section-modal');
+    return;
+  }
+
+  // 天気セクションは気象データを表示
+  if(id==='heat'&&wxData){
+    const bar=document.createElement('div');
+    bar.style='background:#e3f2fd;border-radius:8px;padding:12px;margin-bottom:12px;font-size:13px;';
+    const wl=wxData.lv;
+    bar.innerHTML=`<b>🌡️ 現在の気象データ（Open-Meteo自動取得）</b><br>
+      気温: <b>${wxData.temp}℃</b> / 湿度: <b>${wxData.hum}%</b> / 天気: ${WX_CODES[wxData.code]||'—'}<br>
+      WBGT目安: <b>${wxData.wbgt}℃</b> <span class="wbgt-badge ${wl.cls}">${wl.label}</span>`;
+    body.appendChild(bar);
+  }
+
+  const wrap=document.createElement('div');wrap.innerHTML=buildTable(id);body.appendChild(wrap);
+
+  const addBtn=document.createElement('button');
+  addBtn.className='add-row-btn';addBtn.textContent=L.addRow;
+  addBtn.onclick=()=>addTableRow(id);body.appendChild(addBtn);
+
+  // 画像セクション
+  const imgSec=document.createElement('div');imgSec.style.marginTop='18px';
+  imgSec.innerHTML=`<div style="font-size:12px;font-weight:700;color:var(--brand-dark);margin-bottom:6px;">📎 添付画像・ファイル</div>`;
+  const prev=document.createElement('div');prev.className='img-preview-list';prev.id=`ip-${id}`;imgSec.appendChild(prev);
+  const ua=document.createElement('div');ua.className='img-upload-area';ua.innerHTML='📁 クリックまたはドラッグで画像追加';
+  ua.onclick=()=>document.getElementById(`fi-${id}`).click();
+  ua.addEventListener('dragover',e=>{e.preventDefault();ua.style.borderColor='#1976d2';});
+  ua.addEventListener('dragleave',()=>{ua.style.borderColor='';});
+  ua.addEventListener('drop',e=>{e.preventDefault();ua.style.borderColor='';handleFiles(id,e.dataTransfer.files);});
+  imgSec.appendChild(ua);
+  const fi=document.createElement('input');fi.type='file';fi.id=`fi-${id}`;fi.accept='image/*,application/pdf';fi.multiple=true;fi.style.display='none';
+  fi.onchange=e=>handleFiles(id,e.target.files);imgSec.appendChild(fi);
+  body.appendChild(imgSec);renderImages(id);
+
+  const sb=document.createElement('button');sb.className='save-btn';sb.textContent=L.saveBtn;
+  sb.onclick=()=>saveTableEdit(id);body.appendChild(sb);
+
+  openModal('section-modal');
+}
+
+function buildTable(id){
+  const sec=appData.sections[id];
+  const th=sec.cols.map(c=>`<th>${escH(c)}</th>`).join('')+'<th style="width:32px;"></th>';
+  const tbody=sec.rows.map((row,ri)=>{
+    const cells=row.map((cell,ci)=>{
+      const type=sec.colTypes[ci];
+      if(type==='badge'){
+        const[cls,label]=(cell||'ok:').split(':');
+        const sel=['ok','warn','danger'].map(v=>`<option value="${v}"${v===cls?' selected':''}>${v==='ok'?'緑':v==='warn'?'橙':'赤'}</option>`).join('');
+        return `<td><select data-row="${ri}" data-col="${ci}" class="bs">${sel}</select>
+          <input type="text" data-row="${ri}" data-col="${ci}" data-bl="1" value="${escA(label||'')}" placeholder="ラベル" style="margin-top:3px;"></td>`;
+      }else if(type==='textarea'){
+        return `<td><textarea data-row="${ri}" data-col="${ci}">${escH(cell)}</textarea></td>`;
+      }
+      return `<td><input type="text" data-row="${ri}" data-col="${ci}" value="${escA(cell)}"></td>`;
+    }).join('');
+    return `<tr>${cells}<td><button class="row-del" onclick="delRow('${id}',${ri})">✕</button></td></tr>`;
+  }).join('');
+  return `<table class="modal-table"><thead><tr>${th}</tr></thead><tbody id="tb-${id}">${tbody}</tbody></table>`;
+}
+
+function updateImproveCardStatus(){
+  const sec=appData.sections['improve'];if(!sec) return;
+  const total=sec.rows.length;
+  const adopted=sec.rows.filter(r=>(r[2]||'').startsWith('ok')).length;
+  const card=appData.cards.find(c=>c.id==='improve');
+  if(card){card.status=`提案数：${total}件（採用：${adopted}件）`;saveData();renderCards();}
+}
+
+function addTableRow(id){
+  const sec=appData.sections[id];
+  const ri=sec.rows.length;
+  const newRow=sec.colTypes.map(t=>t==='badge'?'ok:':'');
+  sec.rows.push(newRow);
+  const tb=document.getElementById(`tb-${id}`);if(!tb) return;
+  const cells=newRow.map((cell,ci)=>{
+    const type=sec.colTypes[ci];
+    if(type==='badge'){
+      return`<td><select data-row="${ri}" data-col="${ci}" class="bs"><option value="ok" selected>緑</option><option value="warn">橙</option><option value="danger">赤</option></select>
+        <input type="text" data-row="${ri}" data-col="${ci}" data-bl="1" placeholder="ラベル" style="margin-top:3px;"></td>`;
+    }else if(type==='textarea'){return`<td><textarea data-row="${ri}" data-col="${ci}"></textarea></td>`;}
+    return`<td><input type="text" data-row="${ri}" data-col="${ci}" value=""></td>`;
+  }).join('');
+  const tr=document.createElement('tr');tr.innerHTML=cells+`<td><button class="row-del" onclick="delRow('${id}',${ri})">✕</button></td>`;
+  tb.appendChild(tr);
+  if(id==='improve') updateImproveCardStatus();
+}
+
+function delRow(id,ri){
+  showConfirm('この行を削除しますか？',()=>{
+    appData.sections[id].rows.splice(ri,1);saveData();openSection(id);
+    if(id==='improve') updateImproveCardStatus();
+  });
+}
+
+function saveTableEdit(id){
+  const sec=appData.sections[id];
+  const tb=document.getElementById(`tb-${id}`);if(!tb) return;
+  sec.rows=[];
+  tb.querySelectorAll('tr').forEach(tr=>{
+    const row=sec.colTypes.map((type,ci)=>{
+      if(type==='badge'){
+        const s=tr.querySelector(`select[data-col="${ci}"]`);
+        const l=tr.querySelector(`input[data-col="${ci}"][data-bl]`);
+        return`${s?s.value:'ok'}:${l?l.value.trim():''}`;
+      }else if(type==='textarea'){
+        const ta=tr.querySelector(`textarea[data-col="${ci}"]`);return ta?ta.value.trim():'';
+      }
+      const inp=tr.querySelector(`input[data-col="${ci}"]:not([data-bl])`);return inp?inp.value.trim():'';
+    });
+    if(row.some(v=>v)) sec.rows.push(row);
+  });
+  saveData();autoAlerts();
+  if(id==='improve') updateImproveCardStatus();
+  alert('✅ 保存しました');closeModal('section-modal');
+}
+
+/* =====================================================
+   BOARD — みんなの掲示板（投稿・リアクション）
+   ===================================================== */
+function loadReacted(){
+  try{return JSON.parse(localStorage.getItem('tekken_reacted_v1')||'{}');}catch(e){return{};}
+}
+function saveReacted(r){localStorage.setItem('tekken_reacted_v1',JSON.stringify(r));}
+
+function updateBoardCardStatus(){
+  const card=appData.cards.find(c=>c.id==='board');
+  if(card){card.status=`投稿数：${appData.board.length}件`;renderCards();}
+}
+
+function renderBoard(container){
+  // 投稿フォーム
+  const formWrap=document.createElement('div');
+  formWrap.style='background:#f0f6ff;border-radius:10px;padding:14px;margin-bottom:16px;';
+  formWrap.innerHTML=`
+    <div style="font-size:12px;font-weight:700;color:var(--brand-dark);margin-bottom:8px;">✏️ 投稿する</div>
+    <input type="text" id="board-author" placeholder="お名前（任意・空欄は「匿名」になります）" style="width:100%;padding:7px 9px;border:1px solid #ccc;border-radius:6px;font-family:var(--font);font-size:13px;margin-bottom:6px;">
+    <textarea id="board-text" placeholder="良かったこと・助けてもらったことなど、気軽に投稿してください…" style="width:100%;min-height:70px;padding:7px 9px;border:1px solid #ccc;border-radius:6px;font-family:var(--font);font-size:13px;resize:vertical;"></textarea>
+    <div class="img-upload-area" id="board-img-area" style="margin-top:8px;padding:10px;font-size:12px;">📷 クリックで写真を追加（任意）</div>
+    <div class="img-preview-list" id="board-img-preview"></div>
+    <input type="file" id="board-img-input" accept="image/*" style="display:none;">
+    <button class="save-btn" id="board-submit-btn" style="margin-top:10px;">📤 投稿する</button>
+  `;
+  container.appendChild(formWrap);
+
+  let pendingImage=null;
+  const imgArea=formWrap.querySelector('#board-img-area');
+  const imgInput=formWrap.querySelector('#board-img-input');
+  const imgPreview=formWrap.querySelector('#board-img-preview');
+  imgArea.onclick=()=>imgInput.click();
+  imgInput.onchange=e=>{
+    const file=e.target.files[0];if(!file) return;
+    const reader=new FileReader();
+    reader.onload=ev=>{
+      pendingImage=ev.target.result;
+      imgPreview.innerHTML='';
+      const wrap=document.createElement('div');wrap.className='img-thumb-wrap';
+      wrap.innerHTML=`<img src="${pendingImage}"><button class="img-thumb-del">✕</button>`;
+      wrap.querySelector('.img-thumb-del').onclick=()=>{pendingImage=null;imgPreview.innerHTML='';};
+      imgPreview.appendChild(wrap);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  formWrap.querySelector('#board-submit-btn').onclick=()=>{
+    const author=formWrap.querySelector('#board-author').value.trim()||'匿名';
+    const text=formWrap.querySelector('#board-text').value.trim();
+    if(!text){alert('投稿内容を入力してください');return;}
+    const post={
+      id:'p'+Date.now()+Math.floor(Math.random()*1000),
+      author,text,image:pendingImage,
+      time:new Date().toLocaleString('ja-JP',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}),
+      reactions:{smile:0,thanks:0,nice:0}
+    };
+    appData.board.unshift(post);
+    updateBoardCardStatus();
+    saveData();
+    openSection('board');
+  };
+
+  // フィード
+  const feedLabel=document.createElement('div');
+  feedLabel.style='font-size:12px;font-weight:700;color:var(--brand-dark);margin:14px 0 8px;';
+  feedLabel.textContent=`💬 みんなの投稿（${appData.board.length}件）`;
+  container.appendChild(feedLabel);
+
+  if(!appData.board.length){
+    const empty=document.createElement('p');
+    empty.style='font-size:13px;color:var(--text-sub);text-align:center;padding:20px;';
+    empty.textContent='まだ投稿がありません。最初の投稿をしてみましょう！';
+    container.appendChild(empty);
+    return;
+  }
+
+  const reacted=loadReacted();
+  appData.board.forEach(post=>{
+    const card=document.createElement('div');
+    card.style='background:#fff;border:1px solid #e0e5f0;border-radius:10px;padding:12px 14px;margin-bottom:10px;';
+    const myReacts=reacted[post.id]||[];
+    const reactBtn=(type,emoji,label)=>{
+      const active=myReacts.includes(type);
+      const cnt=(post.reactions&&post.reactions[type])||0;
+      return `<button onclick="reactPost('${post.id}','${type}')" style="border:1px solid ${active?'var(--brand-accent)':'#ddd'};background:${active?'#e3f2fd':'#fff'};border-radius:20px;padding:4px 10px;font-size:12px;cursor:pointer;font-family:var(--font);margin-right:6px;">${emoji} ${label} ${cnt}</button>`;
+    };
+    const delBtn=isEditMode?`<button class="del-btn" style="display:inline;" onclick="deleteBoardPost('${post.id}')">✕</button>`:'';
+    card.innerHTML=`
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <div style="font-size:13px;font-weight:700;color:var(--brand-dark);">👤 ${escH(post.author)}</div>
+        <div style="font-size:11px;color:var(--text-sub);display:flex;align-items:center;gap:4px;">${escH(post.time)}${delBtn}</div>
+      </div>
+      <div style="font-size:13px;color:var(--text-main);line-height:1.6;white-space:pre-wrap;margin-bottom:8px;">${escH(post.text)}</div>
+      ${post.image?`<img src="${post.image}" style="max-width:220px;max-height:170px;border-radius:8px;border:1px solid #ddd;margin-bottom:8px;display:block;cursor:pointer;" onclick="window.open('${post.image}','_blank')">`:''}
+      <div>${reactBtn('smile','😊','いいね')}${reactBtn('thanks','🙏','助かった')}${reactBtn('nice','👏','ナイス')}</div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+function reactPost(postId,type){
+  const post=appData.board.find(p=>p.id===postId);if(!post) return;
+  if(!post.reactions) post.reactions={smile:0,thanks:0,nice:0};
+  const reacted=loadReacted();
+  if(!reacted[postId]) reacted[postId]=[];
+  const idx=reacted[postId].indexOf(type);
+  if(idx>=0){
+    reacted[postId].splice(idx,1);
+    post.reactions[type]=Math.max(0,(post.reactions[type]||0)-1);
+  }else{
+    reacted[postId].push(type);
+    post.reactions[type]=(post.reactions[type]||0)+1;
+  }
+  saveReacted(reacted);saveData();openSection('board');
+}
+
+function deleteBoardPost(id){
+  showConfirm('この投稿を削除しますか？',()=>{
+    appData.board=appData.board.filter(p=>p.id!==id);
+    updateBoardCardStatus();saveData();openSection('board');
+  });
+}
+
+/* =====================================================
+   IMAGES
+   ===================================================== */
+function handleFiles(id,files){
+  const sec=appData.sections[id];if(!sec.images) sec.images=[];
+  Array.from(files).forEach(file=>{
+    const reader=new FileReader();
+    reader.onload=e=>{sec.images.push({name:file.name,data:e.target.result,type:file.type});saveData();renderImages(id);};
+    reader.readAsDataURL(file);
+  });
+}
+function renderImages(id){
+  const sec=appData.sections[id];
+  const list=document.getElementById(`ip-${id}`);if(!list) return;
+  list.innerHTML='';
+  (sec.images||[]).forEach((img,i)=>{
+    const w=document.createElement('div');w.className='img-thumb-wrap';
+    if(img.type==='application/pdf'){
+      w.innerHTML=`<div style="width:80px;height:62px;background:#f5f5f5;border:1px solid #ddd;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#555;text-align:center;padding:3px;">📄<br>${escH(img.name)}</div>
+        <button class="img-thumb-del" onclick="delImg('${id}',${i})">✕</button>`;
+    }else{
+      w.innerHTML=`<img src="${img.data}" title="${escA(img.name)}">
+        <button class="img-thumb-del" onclick="delImg('${id}',${i})">✕</button>`;
+      w.querySelector('img').onclick=()=>window.open(img.data,'_blank');
+    }
+    list.appendChild(w);
+  });
+}
+function delImg(id,i){
+  showConfirm('この画像を削除しますか？',()=>{
+    appData.sections[id].images.splice(i,1);saveData();renderImages(id);
+  });
+}
+
+/* =====================================================
+   EDIT MODE
+   ===================================================== */
+function toggleEditMode(){
+  isEditMode=!isEditMode;
+  document.body.classList.toggle('edit-mode',isEditMode);
+  const L=I18N[currentLang]||I18N.ja;
+  const btn=document.getElementById('edit-toggle');
+  btn.textContent=isEditMode?L.editEnd:L.editMode;
+  btn.classList.toggle('on',isEditMode);
+  document.getElementById('translate-btn').style.display=isEditMode?'block':'none';
+  document.getElementById('reorder-btn').style.display=isEditMode?'block':'none';
+}
+
+/* =====================================================
+   MODAL
+   ===================================================== */
+function openModal(id){document.getElementById(id).classList.add('active');}
+function closeModal(id){document.getElementById(id).classList.remove('active');}
+document.querySelectorAll('.modal-overlay').forEach(ov=>{
+  ov.addEventListener('click',e=>{if(e.target===ov) ov.classList.remove('active');});
+});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape') document.querySelectorAll('.modal-overlay.active').forEach(el=>el.classList.remove('active'));
+});
+
+/* 確認ダイアログ（window.confirmはサンドボックス環境等でブロックされる場合があるため、独自UIで代替） */
+let _confirmCallback=null;
+function showConfirm(message,onConfirm){
+  document.getElementById('confirm-message').textContent=message;
+  _confirmCallback=onConfirm;
+  openModal('confirm-modal');
+}
+document.getElementById('confirm-ok-btn').addEventListener('click',()=>{
+  closeModal('confirm-modal');
+  const cb=_confirmCallback;_confirmCallback=null;
+  if(cb) cb();
+});
+
+/* =====================================================
+   UTILS
+   ===================================================== */
+function escH(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function escA(s){return String(s).replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+
+/* =====================================================
+   INIT
+   ===================================================== */
+renderNotices();
+renderCards();
+fetchWeather();
+setInterval(fetchWeather,60*60*1000); // 1時間ごとに自動更新
+setTimeout(()=>{updateMorningDuty();autoAlerts();},1000);
+</script>
+</body>
+</html>
+apps-fileview.texmex_20260618.00_p1
+tekkenn.html
+tekkenn.html を表示しています。 

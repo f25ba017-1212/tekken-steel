@@ -45,6 +45,7 @@ header{background:var(--brand-dark);color:var(--white);padding:14px 24px;display
 .wbgt-badge{padding:2px 10px;border-radius:20px;font-size:12px;font-weight:700;}
 .wbgt-safe{background:#1b5e20;}.wbgt-caution{background:#e65100;}.wbgt-warning{background:#b71c1c;}.wbgt-danger{background:#880e4f;}
 #wx-update{font-size:11px;color:#b3e5fc;margin-left:auto;}
+#wx-warning.wx-warn-active{color:#ffcdd2;font-weight:700;}
 #wx-refresh{background:none;border:1px solid #b3e5fc;color:#b3e5fc;border-radius:4px;padding:3px 8px;cursor:pointer;font-size:11px;font-family:var(--font);}
 
 /* CONTAINER */
@@ -178,6 +179,7 @@ footer{text-align:center;padding:16px;font-size:11px;color:var(--text-sub);borde
 @media(max-width:960px){.grid{grid-template-columns:repeat(2,1fr);}}
 @media(max-width:560px){.grid{grid-template-columns:1fr;}header{padding:12px 14px;}.hdr-left h1{font-size:17px;}.trans-area{grid-template-columns:1fr;}}
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
@@ -192,6 +194,7 @@ footer{text-align:center;padding:16px;font-size:11px;color:var(--text-sub);borde
       <div class="hdr-date" id="js-date"></div>
       <div id="js-time"></div>
       <div id="js-user" style="margin-top:2px;">👤 管理者</div>
+      <div id="cloud-status" style="margin-top:2px;font-size:11px;color:#b3e5fc;">💻 ローカル保存のみ</div>
     </div>
     <div class="hdr-btns">
       <button class="hdr-btn" id="lang-btn" onclick="toggleLangBar()">🌐 言語</button>
@@ -233,6 +236,10 @@ footer{text-align:center;padding:16px;font-size:11px;color:var(--text-sub);borde
   <div class="wx-item">
     <span class="wx-label">⚠️ WBGT目安</span>
     <span class="wx-val"><span id="wx-wbgt-val">—</span> <span class="wbgt-badge" id="wx-wbgt-badge"></span></span>
+  </div>
+  <div class="wx-item">
+    <span class="wx-label">🚨 気象警報</span>
+    <span class="wx-val" id="wx-warning">取得中…</span>
   </div>
   <span id="wx-update"></span>
   <button id="wx-refresh" onclick="fetchWeather()">↻ 更新</button>
@@ -328,7 +335,7 @@ footer{text-align:center;padding:16px;font-size:11px;color:var(--text-sub);borde
       <button class="modal-close" onclick="closeModal('trans-modal')">✕</button>
     </div>
     <div class="modal-body">
-      <p style="font-size:13px;color:var(--text-sub);">日本語から各言語へ翻訳します（MyMemory無料APIを使用）。</p>
+      <p style="font-size:13px;color:var(--text-sub);">日本語から各言語へ翻訳します（MyMemory無料APIを使用）。長文は自動で分割して翻訳するので、全文まとめて貼り付けてOKです。</p>
       <div class="trans-area">
         <div class="trans-box">
           <label>🇯🇵 日本語（原文）</label>
@@ -346,7 +353,7 @@ footer{text-align:center;padding:16px;font-size:11px;color:var(--text-sub);borde
         </div>
       </div>
       <button class="trans-btn" onclick="doTranslate()">🌐 翻訳する</button>
-      <p class="trans-notice">※ MyMemory無料APIを使用（1日約1000文字まで）。長文はGoogle翻訳をご利用ください。</p>
+      <p class="trans-notice">※ MyMemory無料API使用。1日の翻訳量には上限があるため、大量の翻訳を毎日行う場合はGoogle翻訳もあわせてご利用ください。</p>
       <button class="add-row-btn" style="margin-top:8px;width:100%;text-align:center;" onclick="openGoogleTranslate()">🔗 Google翻訳で開く</button>
     </div>
   </div>
@@ -403,7 +410,8 @@ const DEFAULT = {
     {id:"license",icon:"📋",title:"資格管理",bullets:["玉掛け・クレーン・溶接資格","更新期限自動アラート","資格証コピーの保管"],status:"自動チェック中",statusColor:"ok"},
     {id:"tool",icon:"🔧",title:"工具貸出管理",bullets:["工具の使用者・場所の確認","返却状況のリアルタイム管理","紛失・不具合の報告"],status:"貸出中：4点",statusColor:"warn"},
     {id:"board",icon:"📣",title:"みんなの掲示板（Good & Thanks）",bullets:["良かったこと・助けてもらった話を投稿","写真付きで気軽にシェア","😊🙏👏でリアクションできる"],status:"投稿数：2件",statusColor:"ok"},
-    {id:"improve",icon:"💡",title:"改善提案箱",bullets:["「もっとこうしたら良くなる」を匿名で投稿","状態は検討中→採用／見送りで管理","採用された提案は現場に反映"],status:"提案数：2件（採用：1件）",statusColor:"ok"}
+    {id:"improve",icon:"💡",title:"改善提案箱",bullets:["「もっとこうしたら良くなる」を匿名で投稿","状態は検討中→採用／見送りで管理","採用された提案は現場に反映"],status:"提案数：2件（採用：1件）",statusColor:"ok"},
+    {id:"horoscope",icon:"🔮",title:"今日の占い",bullets:["星座を選んで今日の運勢をチェック","無料占いAPIを日本語に自動翻訳","気分転換にどうぞ"],status:"気分転換に一言占い",statusColor:"ok"}
   ],
   sections:{
     hiyari:{desc:"現場で気づいた危険箇所・ヒヤリとした体験を記録・共有します。小さな気づきが大きな事故を防ぎます。",cols:["日付","場所","内容","状態"],colTypes:["text","text","textarea","badge"],rows:[["2025/07/08","第一工場 通路","スリングベルトが床に放置されており、つまずきそうになった","ok:対応済"],["2025/07/05","溶接エリア","換気扇の停止を気づかず溶接を開始、煙充満","warn:対応中"]],images:[]},
@@ -411,10 +419,11 @@ const DEFAULT = {
     calibration:{desc:"検査器具・測定機器の校正期限を管理します。赤表示の器具は使用を停止し、速やかに校正を実施してください。",cols:["器具名","最終校正日","次回期限","状態"],colTypes:["text","text","text","badge"],rows:[["超音波厚み計 UT-01","2024/07/10","2025/07/10","danger:期限切れ"],["デジタルノギス DN-03","2025/05/01","2025/08/01","warn:30日以内"],["トルクレンチ TW-200","2025/06/01","2025/09/01","warn:30日以内"],["マイクロメーター MM-02","2025/03/15","2026/03/15","ok:正常"]],images:[]},
     defect:{desc:"製造・溶接ミスを記録し、原因と対策を全員で共有します。再発防止のための情報として活用してください。",cols:["日付","不良内容","原因","対策"],colTypes:["text","textarea","textarea","textarea"],rows:[["2025/07/03","溶接ビード不整（アンダーカット）","電流値の設定ミス","作業前の電流確認チェックを必須化"],["2025/06/25","穴位置ズレ（±3mm超）","図面の旧版を使用","図面は最新版のみ使用・旧版を回収"]],images:[]},
     morning:{desc:"本日の作業内容・安全目標・朝礼担当を確認します。担当はローテーションに基づき自動計算されます。",cols:["項目","内容"],colTypes:["text","textarea"],rows:[["朝礼担当","（自動計算）"],["安全目標（本日）","「急がず・焦らず・確認してから」熱中症・落下物に注意"],["本日の作業予定","第一工場：H鋼柱 溶接仕上げ\n第二工場：ブラケット穴あけ・バリ取り"],["危険ポイント","午後のクレーン点検中は立入禁止エリアに注意"],["次回朝礼担当","（自動計算）"]],images:[]},
-    heat:{desc:"気温・湿度・WBGTはOpen-Meteo APIで自動取得します。体調チェックも記録してください。",cols:["項目","内容"],colTypes:["text","textarea"],rows:[["本日の最高気温","API自動取得"],["WBGT（暑さ指数）","API自動計算\n（25未満:安全 / 25-28:注意 / 28-31:警戒 / 31以上:危険）"],["水分補給の目安","作業中は20〜30分に1回（コップ1杯約200ml）"],["体調チェック（本日）","全員異常なし"]],images:[]},
+    heat:{desc:"気温・湿度・WBGTはOpen-Meteo APIで、気象警報・注意報は気象庁APIで自動取得します。体調チェックも記録してください。",cols:["項目","内容"],colTypes:["text","textarea"],rows:[["本日の最高気温","API自動取得"],["WBGT（暑さ指数）","API自動計算\n（25未満:安全 / 25-28:注意 / 28-31:警戒 / 31以上:危険）"],["気象警報・注意報（気象庁）","API自動取得"],["水分補給の目安","作業中は20〜30分に1回（コップ1杯約200ml）"],["体調チェック（本日）","全員異常なし"]],images:[]},
     license:{desc:"社員の保有資格と更新期限を管理します。期限が近い資格（60日以内）は自動でお知らせ欄に表示されます。",cols:["氏名","資格名","取得日","有効期限","状態"],colTypes:["text","text","text","text","badge"],rows:[["山田 一郎","玉掛け技能講習","2019/04/10","（無期限）","ok:有効"],["鈴木 健二","溶接技能者（JIS WES）","2023/06/01","2025/08/15","warn:60日以内"],["佐藤 誠","フォークリフト運転技能","2022/10/20","2025/09/01","warn:60日以内"],["田中 太郎","クレーン運転士（5t未満）","2021/03/15","（無期限）","ok:有効"]],images:[]},
     tool:{desc:"工具の貸出・返却状況を記録します。使用後は必ず当日中に返却してください。",cols:["工具名","使用者","貸出日","返却予定","状態"],colTypes:["text","text","text","text","badge"],rows:[["トルクレンチ 200Nm","山田 一郎","2025/07/07","2025/07/08","ok:使用中"],["グラインダー #2","鈴木 健二","2025/07/08","2025/07/08","ok:使用中"],["デジタル水平器","佐藤 誠","2025/07/01","2025/07/03","danger:未返却（超過）"]],images:[]},
     board:{desc:"良かったこと・助けてもらったことを自由に投稿してください。投稿には😊🙏👏でリアクションできます。"},
+    horoscope:{desc:"星座を選ぶと、無料の占いAPI（Free Horoscope API）から本日の運勢を取得し、日本語に自動翻訳して表示します。気分転換にどうぞ。"},
     improve:{desc:"「もっとこうしたら現場が良くなる」というアイデアを匿名で投稿できます。氏名の入力欄はありません。会社で検討のうえ、状態を更新します。採用された提案は現場に反映されます。",cols:["提出日","改善提案の内容","状態","会社からのコメント"],colTypes:["text","textarea","badge","textarea"],rows:[["2025/06/20","溶接エリアの換気扇に「使用中」の札を掛けて、消し忘れに気づきやすくしてほしい","ok:採用","2025/06/25より導入。危険予知の観点からも有効なため即採用としました。"],["2025/06/28","工具置き場に写真付きの定位置表示（写真管理板）を設置してほしい","warn:検討中","来月の安全会議で予算含め検討します。"]],images:[]}
   },
   rotation:{members:["山田 一郎","鈴木 健二","佐藤 誠","田中 太郎"],startDate:"2025/07/07"},
@@ -446,7 +455,131 @@ function loadData(){
   try{const s=localStorage.getItem('tekken_v3');return s?JSON.parse(s):JSON.parse(JSON.stringify(DEFAULT));}
   catch(e){return JSON.parse(JSON.stringify(DEFAULT));}
 }
-function saveData(){localStorage.setItem('tekken_v3',JSON.stringify(appData));}
+function saveData(){
+  localStorage.setItem('tekken_v3',JSON.stringify(appData));
+  pushToCloud();
+}
+
+/* =====================================================
+   CLOUD SYNC（Supabase） — 複数端末・複数ブラウザでデータを共有
+   ---------------------------------------------------
+   セットアップ手順:
+   1) https://supabase.com で無料アカウント登録 →「New project」でプロジェクト作成
+   2) 左メニュー「SQL Editor」で以下を実行してテーブルを作成:
+
+      create table portal_data (
+        id text primary key,
+        data jsonb not null,
+        updated_at timestamptz default now()
+      );
+      alter table portal_data enable row level security;
+      create policy "public read"   on portal_data for select using (true);
+      create policy "public insert" on portal_data for insert with check (true);
+      create policy "public update" on portal_data for update using (true);
+      alter publication supabase_realtime add table portal_data;
+
+   3) 左メニュー「Project Settings」→「API」で
+      Project URL と anon public key を確認し、下の2行に貼り付ける。
+
+   ※ anon keyはSupabaseの仕様上、クライアント側（このHTML）に埋め込まれる
+     前提の鍵です。上記のpolicyは「誰でも読み書きできる」設定のため、
+     社内利用の範囲では現実的ですが、URLを知る誰でもデータを書き換えられる
+     点は理解した上でご利用ください。厳密な権限管理が必要な場合はSupabase側の
+     認証機能（Auth）の追加を検討してください。
+   ===================================================== */
+const SUPABASE_URL='https://uxmefeugnnarvmogwiil.supabase.co';        // 例: 'https://xxxxxxxx.supabase.co'
+const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV4bWVmZXVnbm5hcnZtb2d3aWlsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxNjU4MTgsImV4cCI6MjA5OTc0MTgxOH0.2LE5Bnh3OU5fvsa9oThKBYfRqFIyUboOCDFWrCogT7U';   // 例: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
+const SUPABASE_TABLE='portal_data';
+const SUPABASE_ROW_ID='tekken_portal';
+
+let sbClient=null;
+let cloudEnabled=false;
+let cloudSyncTimer=null;
+let isApplyingRemoteData=false;
+let lastSyncedJSON=null;
+let currentOpenSectionId=null;
+
+if(window.supabase&&SUPABASE_URL&&SUPABASE_ANON_KEY){
+  try{
+    sbClient=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+    cloudEnabled=true;
+  }catch(e){
+    console.error('Supabase初期化に失敗しました',e);
+  }
+}
+
+function setCloudStatus(text){
+  const el=document.getElementById('cloud-status');
+  if(el) el.textContent=text;
+}
+
+async function loadFromCloud(){
+  if(!cloudEnabled) return;
+  setCloudStatus('☁️ クラウドから読込中…');
+  try{
+    const{data,error}=await sbClient.from(SUPABASE_TABLE).select('data').eq('id',SUPABASE_ROW_ID).maybeSingle();
+    if(error) throw error;
+    if(data&&data.data){
+      isApplyingRemoteData=true;
+      appData=data.data;
+      localStorage.setItem('tekken_v3',JSON.stringify(appData));
+      renderCards();renderNotices();
+      isApplyingRemoteData=false;
+      lastSyncedJSON=JSON.stringify(appData);
+      setCloudStatus('☁️ クラウド同期：有効');
+    }else{
+      // クラウド側にまだ何もない場合は、今のローカルデータを初期データとしてアップロード
+      await pushToCloudNow();
+      setCloudStatus('☁️ クラウド同期：有効（初回アップロード）');
+    }
+  }catch(e){
+    console.error('クラウドからの読込に失敗しました',e);
+    setCloudStatus('⚠️ クラウド接続に失敗（ローカル保存のみで動作中）');
+  }
+}
+
+async function pushToCloudNow(){
+  if(!cloudEnabled) return;
+  const json=JSON.stringify(appData);
+  if(json===lastSyncedJSON) return;
+  try{
+    const{error}=await sbClient.from(SUPABASE_TABLE).upsert({id:SUPABASE_ROW_ID,data:appData,updated_at:new Date().toISOString()});
+    if(error) throw error;
+    lastSyncedJSON=json;
+  }catch(e){
+    console.error('クラウドへの保存に失敗しました',e);
+    setCloudStatus('⚠️ クラウド保存に失敗しました（ローカルには保存済み）');
+  }
+}
+
+function pushToCloud(){
+  if(!cloudEnabled||isApplyingRemoteData) return;
+  clearTimeout(cloudSyncTimer);
+  cloudSyncTimer=setTimeout(pushToCloudNow,800);
+}
+
+function subscribeCloudRealtime(){
+  if(!cloudEnabled) return;
+  sbClient.channel('portal_data_changes')
+    .on('postgres_changes',{event:'*',schema:'public',table:SUPABASE_TABLE,filter:`id=eq.${SUPABASE_ROW_ID}`},payload=>{
+      if(!payload.new||!payload.new.data) return;
+      const incomingJSON=JSON.stringify(payload.new.data);
+      if(incomingJSON===lastSyncedJSON) return; // 自分の変更なので無視
+      isApplyingRemoteData=true;
+      appData=payload.new.data;
+      localStorage.setItem('tekken_v3',JSON.stringify(appData));
+      renderCards();renderNotices();
+      const secModal=document.getElementById('section-modal');
+      if(secModal&&secModal.classList.contains('active')&&currentOpenSectionId){
+        openSection(currentOpenSectionId);
+      }
+      isApplyingRemoteData=false;
+      lastSyncedJSON=incomingJSON;
+      setCloudStatus('☁️ 他の端末の変更を反映しました');
+      setTimeout(()=>setCloudStatus('☁️ クラウド同期：有効'),3000);
+    })
+    .subscribe();
+}
 
 /* 既存データに掲示板機能・改善提案箱がなければ追加（旧バージョンからの移行対応） */
 (function migrateBoard(){
@@ -470,6 +603,18 @@ function saveData(){localStorage.setItem('tekken_v3',JSON.stringify(appData));}
     appData.cards.push({id:"improve",icon:"💡",title:"改善提案箱",bullets:["「もっとこうしたら良くなる」を匿名で投稿","状態は検討中→採用／見送りで管理","採用された提案は現場に反映"],status:`提案数：${rows.length}件（採用：${adopted}件）`,statusColor:"ok"});
     changed=true;
   }
+  if(appData.sections.heat&&appData.sections.heat.rows&&appData.sections.heat.rows.length===4){
+    appData.sections.heat.rows.splice(2,0,["気象警報・注意報（気象庁）","API自動取得"]);
+    changed=true;
+  }
+  if(!appData.sections.horoscope){
+    appData.sections.horoscope={desc:"星座を選ぶと、無料の占いAPI（Free Horoscope API）から本日の運勢を取得し、日本語に自動翻訳して表示します。気分転換にどうぞ。"};
+    changed=true;
+  }
+  if(!appData.cards.find(c=>c.id==='horoscope')){
+    appData.cards.push({id:"horoscope",icon:"🔮",title:"今日の占い",bullets:["星座を選んで今日の運勢をチェック","無料占いAPIを日本語に自動翻訳","気分転換にどうぞ"],status:"気分転換に一言占い",statusColor:"ok"});
+    changed=true;
+  }
   if(changed) saveData();
 })();
 
@@ -491,6 +636,16 @@ updateClock();setInterval(updateClock,1000);
 const WX_CODES={0:'☀️ 快晴',1:'🌤️ 晴れ',2:'⛅ 曇り',3:'☁️ 曇天',45:'🌫️ 霧',48:'🌫️ 霧',51:'🌦️ 霧雨',53:'🌦️ 霧雨',55:'🌦️ 霧雨',61:'🌧️ 小雨',63:'🌧️ 雨',65:'🌧️ 大雨',71:'❄️ 小雪',73:'❄️ 雪',75:'❄️ 大雪',80:'🌧️ にわか雨',81:'🌧️ にわか雨',82:'⛈️ 激しい雨',95:'⛈️ 雷雨',99:'⛈️ 雷雨'};
 // 高崎市の座標（工場の実際の位置に変更可能）
 const SITE_LAT=36.3219,SITE_LON=139.0033,SITE_NAME='高崎市（群馬）';
+/* 気象庁 警報・注意報API用（前橋地方気象台／群馬県）
+   100000 = 群馬県, 100010 = 群馬県南部（高崎市を含む一次細分区域） */
+const JMA_PREF_CODE='100000',JMA_AREA_CODE='100010';
+const JMA_WARNING_NAMES={
+  '02':'暴風雪警報','03':'大雨警報','04':'洪水警報','05':'暴風警報','06':'大雪警報','07':'波浪警報','08':'高潮警報',
+  '10':'大雨注意報','12':'大雪注意報','13':'風雪注意報','14':'雷注意報','15':'強風注意報','16':'波浪注意報','17':'融雪注意報','18':'洪水注意報','19':'高潮注意報',
+  '20':'濃霧注意報','21':'乾燥注意報','22':'なだれ注意報','23':'低温注意報','24':'霜注意報','25':'着氷注意報','26':'着雪注意報',
+  '32':'暴風雪特別警報','33':'大雨特別警報','35':'暴風特別警報','36':'大雪特別警報','37':'波浪特別警報','38':'高潮特別警報'
+};
+let jmaWarnings=[];
 
 function wbgtFromTempHum(t,h){
   // 簡易WBGT推定式（屋外日射あり）
@@ -534,8 +689,45 @@ async function fetchWeather(){
     updateHeatSection(temp,hum,wbgt,lv,WX_CODES[code]||'—');
     // アラート通知
     autoAlerts();
+    // 気象警報・注意報を取得（非同期・失敗しても天気表示には影響しない）
+    fetchWarnings();
   }catch(e){
     document.getElementById('wx-update').textContent='取得失敗（ネットワーク確認）';
+  }
+}
+
+async function fetchWarnings(){
+  const el=document.getElementById('wx-warning');
+  try{
+    const res=await fetch(`https://www.jma.go.jp/bosai/warning/data/warning/${JMA_PREF_CODE}.json`);
+    const json=await res.json();
+    const class10=(json.areaTypes&&json.areaTypes[0]&&json.areaTypes[0].areas)||[];
+    const area=class10.find(a=>a.code===JMA_AREA_CODE);
+    jmaWarnings=[];
+    if(area){
+      (area.warnings||[]).forEach(w=>{
+        if(!w.code) return;
+        if(w.status==='解除') return;
+        const name=JMA_WARNING_NAMES[w.code];
+        if(name) jmaWarnings.push(name);
+      });
+    }
+    if(jmaWarnings.length){
+      el.textContent=jmaWarnings.join('・');
+      el.classList.add('wx-warn-active');
+    }else{
+      el.textContent='発表なし';
+      el.classList.remove('wx-warn-active');
+    }
+    const sec=appData.sections['heat'];
+    if(sec&&sec.rows&&sec.rows[2]){
+      sec.rows[2][1]=jmaWarnings.length?`${jmaWarnings.join('、')}（前橋地方気象台発表）`:'現在、発表されている警報・注意報はありません（前橋地方気象台）';
+      saveData();
+    }
+    // お知らせに反映
+    autoAlerts();
+  }catch(e){
+    el.textContent='取得失敗';
   }
 }
 
@@ -582,6 +774,12 @@ function autoAlerts(){
 
   // WBGT警告
   if(wxData&&wxData.wbgt>=28) alerts.push(`🌡️ 【熱中症警戒】現在のWBGT:${wxData.wbgt}℃ — 水分補給・休憩を徹底してください`);
+
+  // 気象警報・注意報（気象庁）
+  jmaWarnings.forEach(name=>{
+    const prefix=name.endsWith('特別警報')||name.endsWith('警報')?'🔴':'🟠';
+    alerts.push(`${prefix} 【気象庁発表】${name}が発表されています（${SITE_NAME}）`);
+  });
 
   // 既存の自動アラート行を消して再追加
   appData.notices=appData.notices.filter(n=>!n.startsWith('🔴')&&!n.startsWith('🟠')&&!n.startsWith('🌡️'));
@@ -693,25 +891,52 @@ async function translateUI(lang){
   };
 }
 
-/* テキスト翻訳（MyMemory API） */
+/* テキスト翻訳（MyMemory API） — 長文は自動分割して順番に翻訳し、結合する */
+function splitIntoChunks(text,maxLen){
+  maxLen=maxLen||450;
+  const sentences=text.split(/(?<=[。！？\n])/);
+  const chunks=[];
+  let current='';
+  sentences.forEach(s=>{
+    if((current+s).length>maxLen){
+      if(current){chunks.push(current);current='';}
+      if(s.length>maxLen){
+        for(let i=0;i<s.length;i+=maxLen) chunks.push(s.slice(i,i+maxLen));
+      }else{
+        current=s;
+      }
+    }else{
+      current+=s;
+    }
+  });
+  if(current) chunks.push(current);
+  return chunks.filter(c=>c.trim().length>0);
+}
+
 async function doTranslate(){
   const src=document.getElementById('trans-src').value.trim();
   if(!src){alert('翻訳するテキストを入力してください');return;}
   const targetLang=document.getElementById('trans-lang-sel').value;
   const dst=document.getElementById('trans-dst');
-  dst.value='翻訳中…';
   const langPair=`ja|${targetLang}`;
+  const chunks=splitIntoChunks(src,450);
+  const results=[];
+  dst.value=chunks.length>1?`翻訳中…（0/${chunks.length}）`:'翻訳中…';
   try{
-    const url=`https://api.mymemory.translated.net/get?q=${encodeURIComponent(src)}&langpair=${langPair}`;
-    const res=await fetch(url);
-    const json=await res.json();
-    if(json.responseStatus===200){
-      dst.value=json.responseData.translatedText;
-    }else{
-      dst.value='翻訳できませんでした。Google翻訳をお試しください。';
+    for(let i=0;i<chunks.length;i++){
+      const url=`https://api.mymemory.translated.net/get?q=${encodeURIComponent(chunks[i])}&langpair=${langPair}`;
+      const res=await fetch(url);
+      const json=await res.json();
+      if(json.responseStatus===200){
+        results.push(json.responseData.translatedText);
+      }else{
+        results.push(`⚠️[この部分は翻訳できませんでした: ${chunks[i].slice(0,20)}…]`);
+      }
+      if(chunks.length>1) dst.value=`（${i+1}/${chunks.length} 翻訳中…）\n\n`+results.join(' ');
     }
+    dst.value=results.join(' ');
   }catch(e){
-    dst.value='ネットワークエラー。Google翻訳をお試しください。';
+    dst.value=(results.length?results.join(' ')+'\n\n':'')+'⚠️ ネットワークエラーが発生しました。Google翻訳をお試しください。';
   }
 }
 
@@ -873,6 +1098,7 @@ function openSection(id){
   const card=appData.cards.find(c=>c.id===id);
   const sec=appData.sections[id];
   if(!card||!sec) return;
+  currentOpenSectionId=id;
   document.getElementById('section-modal-title').textContent=`${card.icon} ${card.title}`;
   const body=document.getElementById('section-modal-body');
   body.innerHTML='';
@@ -887,6 +1113,13 @@ function openSection(id){
   // 掲示板セクションは専用UIを表示して以降の共通処理はスキップ
   if(id==='board'){
     renderBoard(body);
+    openModal('section-modal');
+    return;
+  }
+
+  // 占いセクションも専用UI
+  if(id==='horoscope'){
+    renderHoroscope(body);
     openModal('section-modal');
     return;
   }
@@ -1130,6 +1363,69 @@ function deleteBoardPost(id){
 }
 
 /* =====================================================
+   HOROSCOPE — 今日の占い（Free Horoscope API + 自動和訳）
+   ===================================================== */
+const ZODIAC_SIGNS=[
+  {en:'aries',ja:'牡羊座',icon:'♈'},{en:'taurus',ja:'牡牛座',icon:'♉'},{en:'gemini',ja:'双子座',icon:'♊'},
+  {en:'cancer',ja:'蟹座',icon:'♋'},{en:'leo',ja:'獅子座',icon:'♌'},{en:'virgo',ja:'乙女座',icon:'♍'},
+  {en:'libra',ja:'天秤座',icon:'♎'},{en:'scorpio',ja:'蠍座',icon:'♏'},{en:'sagittarius',ja:'射手座',icon:'♐'},
+  {en:'capricorn',ja:'山羊座',icon:'♑'},{en:'aquarius',ja:'水瓶座',icon:'♒'},{en:'pisces',ja:'魚座',icon:'♓'}
+];
+
+function renderHoroscope(container){
+  const wrap=document.createElement('div');
+  wrap.style='background:#f5f0ff;border-radius:10px;padding:14px;';
+  const savedSign=appData.horoscopeSign||'aries';
+  wrap.innerHTML=`
+    <div style="font-size:12px;font-weight:700;color:var(--brand-dark);margin-bottom:8px;">🔮 星座を選んで今日の運勢をチェック</div>
+    <select id="horo-sign-sel" style="width:100%;padding:7px 9px;border:1px solid #ccc;border-radius:6px;font-family:var(--font);font-size:13px;margin-bottom:8px;">
+      ${ZODIAC_SIGNS.map(z=>`<option value="${z.en}" ${z.en===savedSign?'selected':''}>${z.icon} ${z.ja}（${z.en}）</option>`).join('')}
+    </select>
+    <button class="save-btn" id="horo-fetch-btn" style="margin-top:0;">🔮 今日の運勢を見る</button>
+    <div id="horo-result" style="margin-top:12px;font-size:13px;color:var(--text-main);line-height:1.8;white-space:pre-wrap;min-height:20px;"></div>
+    <p style="font-size:11px;color:var(--text-sub);margin-top:10px;">※ Free Horoscope API（英語）の内容をMyMemory無料APIで日本語に自動翻訳しています。翻訳のニュアンスは多少調整される場合があります。</p>
+  `;
+  container.appendChild(wrap);
+  const resultEl=wrap.querySelector('#horo-result');
+  const selEl=wrap.querySelector('#horo-sign-sel');
+  wrap.querySelector('#horo-fetch-btn').onclick=()=>fetchHoroscope(selEl.value,resultEl);
+  // 前回選んだ星座があれば自動で表示
+  if(appData.horoscopeSign) fetchHoroscope(appData.horoscopeSign,resultEl);
+}
+
+async function fetchHoroscope(sign,resultEl){
+  resultEl.textContent='🔮 占い中…';
+  appData.horoscopeSign=sign;saveData();
+  try{
+    const res=await fetch(`https://freehoroscopeapi.com/api/v1/get-horoscope/daily?sign=${sign}`);
+    const json=await res.json();
+    const enText=json.data&&json.data.horoscope;
+    if(!enText){resultEl.textContent='取得できませんでした。時間をおいて再度お試しください。';return;}
+    resultEl.textContent='🌐 日本語に翻訳中…';
+    const ja=await translateEnToJa(enText);
+    resultEl.textContent=ja||enText;
+  }catch(e){
+    resultEl.textContent='⚠️ 取得に失敗しました（ネットワークをご確認ください）。';
+  }
+}
+
+async function translateEnToJa(text){
+  const chunks=splitIntoChunks(text,450);
+  const results=[];
+  for(const chunk of chunks){
+    try{
+      const url=`https://api.mymemory.translated.net/get?q=${encodeURIComponent(chunk)}&langpair=en|ja`;
+      const res=await fetch(url);
+      const json=await res.json();
+      results.push(json.responseStatus===200?json.responseData.translatedText:chunk);
+    }catch(e){
+      results.push(chunk);
+    }
+  }
+  return results.join(' ');
+}
+
+/* =====================================================
    IMAGES
    ===================================================== */
 function handleFiles(id,files){
@@ -1215,6 +1511,13 @@ renderNotices();
 renderCards();
 fetchWeather();
 setInterval(fetchWeather,60*60*1000); // 1時間ごとに自動更新
+
+/* クラウド同期の初期化 */
+if(cloudEnabled){
+  loadFromCloud().then(()=>{ subscribeCloudRealtime(); });
+}else{
+  setCloudStatus('💻 ローカル保存のみ（クラウド未設定）');
+}
 setTimeout(()=>{updateMorningDuty();autoAlerts();},1000);
 </script>
 </body>
@@ -1222,3 +1525,6 @@ setTimeout(()=>{updateMorningDuty();autoAlerts();},1000);
 apps-fileview.texmex_20260618.00_p1
 tekkenn.html
 tekkenn.html を表示しています。 
+apps-fileview.texmex_20260708.11_p0
+tekken (6).html
+tekken (6).html を表示しています。

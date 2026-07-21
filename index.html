@@ -4,6 +4,23 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>鐵建 現場ポータル</title>
+
+<!-- PWA用 Meta / Link タグ -->
+<title>鐵建 現場ポータル</title>
+
+<!-- Web App Manifest 読み込み -->
+<link rel="manifest" href="./manifest.json">
+
+<!-- アイコン・Favicon 設定 (manifest.json のアイコンとパスを統一) -->
+<link rel="icon" type="image/png" sizes="192x192" href="./icons/tetsumaru-192.png">
+<link rel="apple-touch-icon" href="./icons/tetsumaru-192.png">
+
+<!-- iOS Safari PWA / テーマカラー設定 -->
+<meta name="theme-color" content="#0d47a1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="現場ポータル">
+
 <style>
 :root{
   --brand-dark:#0d47a1;--brand-mid:#1976d2;--brand-accent:#2196f3;--brand-hover:#1565c0;
@@ -179,14 +196,23 @@ footer{text-align:center;padding:16px;font-size:11px;color:var(--text-sub);borde
 @media(max-width:960px){.grid{grid-template-columns:repeat(2,1fr);}}
 @media(max-width:560px){.grid{grid-template-columns:1fr;}header{padding:12px 14px;}.hdr-left h1{font-size:17px;}.trans-area{grid-template-columns:1fr;}}
 </style>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
+  // Service Worker の登録処理
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then((reg) => console.log('Service Worker registered:', reg))
+      .catch((err) => console.error('Service Worker registration failed:', err));
+  });
+}
+</script>
 </head>
 <body>
 
 <!-- HEADER -->
 <header>
   <div class="hdr-left">
-    <h1>🏭 鐵建　現場ポータルシステム</h1>
+    <h1>🏭 鐵建 現場ポータルシステム</h1>
     <p>教育・安全・品質管理を一つに。</p>
   </div>
   <div class="hdr-right">
@@ -264,7 +290,7 @@ footer{text-align:center;padding:16px;font-size:11px;color:var(--text-sub);borde
   <div class="grid" id="card-grid"></div>
 </div>
 
-<footer>© 2025 鐵建株式会社　現場ポータルシステム — 安全第一</footer>
+<footer>© 2025 鐵建株式会社 現場ポータルシステム — 安全第一</footer>
 
 <!-- ===== MODALS ===== -->
 
@@ -437,7 +463,7 @@ const DEFAULT = {
    I18N ラベル（UI文字列）
    ===================================================== */
 const I18N = {
-  ja:{noticeTitle:"📢 本日のお知らせ",menuLabel:"各種機能メニュー",openBtn:"開く",editBtn:"✏️ 編集",editMode:"✏️ 編集",editEnd:"✅ 編集終了",langBtn:"🌐 言語",transBtn:"✍️ 翻訳",saveBtn:"💾 保存",addRow:"＋ 行を追加",addNotice:"＋ 追加",wxLocation:"現在地",wxTemp:"気温",wxHum:"湿度",wxWeather:"天気",wxWbgt:"WBGT目安",wxRefresh:"↻ 更新",footer:"© 2025 鐵建株式会社　現場ポータルシステム — 安全第一"},
+  ja:{noticeTitle:"📢 本日のお知らせ",menuLabel:"各種機能メニュー",openBtn:"開く",editBtn:"✏️ 編集",editMode:"✏️ 編集",editEnd:"✅ 編集終了",langBtn:"🌐 言語",transBtn:"✍️ 翻訳",saveBtn:"💾 保存",addRow:"＋ 行を追加",addNotice:"＋ 追加",wxLocation:"現在地",wxTemp:"気温",wxHum:"湿度",wxWeather:"天気",wxWbgt:"WBGT目安",wxRefresh:"↻ 更新",footer:"© 2025 鐵建株式会社 現場ポータルシステム — 安全第一"},
   vi:{noticeTitle:"📢 Thông báo hôm nay",menuLabel:"Menu chức năng",openBtn:"Mở",editBtn:"✏️ Sửa",editMode:"✏️ Chỉnh sửa",editEnd:"✅ Kết thúc",langBtn:"🌐 Ngôn ngữ",transBtn:"✍️ Dịch",saveBtn:"💾 Lưu",addRow:"＋ Thêm hàng",addNotice:"＋ Thêm",wxLocation:"Vị trí",wxTemp:"Nhiệt độ",wxHum:"Độ ẩm",wxWeather:"Thời tiết",wxWbgt:"Chỉ số WBGT",wxRefresh:"↻ Làm mới",footer:"© 2025 Tekken Corporation — An toàn trên hết"},
   pt:{noticeTitle:"📢 Avisos de hoje",menuLabel:"Menu de funções",openBtn:"Abrir",editBtn:"✏️ Editar",editMode:"✏️ Editar",editEnd:"✅ Concluir",langBtn:"🌐 Idioma",transBtn:"✍️ Traduzir",saveBtn:"💾 Salvar",addRow:"＋ Adicionar linha",addNotice:"＋ Adicionar",wxLocation:"Local",wxTemp:"Temperatura",wxHum:"Umidade",wxWeather:"Clima",wxWbgt:"Índice WBGT",wxRefresh:"↻ Atualizar",footer:"© 2025 Tekken Corporation — Segurança em primeiro lugar"},
   my:{noticeTitle:"📢 ယနေ့သတိပေးချက်",menuLabel:"လုပ်ငန်းစဉ်မီနူး",openBtn:"ဖွင့်ရန်",editBtn:"✏️ တည်းဖြတ်",editMode:"✏️ တည်းဖြတ်",editEnd:"✅ ပြီးဆုံး",langBtn:"🌐 ဘာသာစကား",transBtn:"✍️ ဘာသာပြန်",saveBtn:"💾 သိမ်းဆည်း",addRow:"＋ တန်းထပ်ထည့်",addNotice:"＋ ထည့်သည်",wxLocation:"တည်နေရာ",wxTemp:"အပူချိန်",wxHum:"စိုထိုင်းဆ",wxWeather:"မိုးလေဝသ",wxWbgt:"WBGT ညွှန်းကိန်း",wxRefresh:"↻ ပြောင်းလဲ",footer:"© 2025 Tekken ကုမ္ပဏီ — ဘေးကင်းရေးကို ဦးစားပေးသည်"}
@@ -462,33 +488,9 @@ function saveData(){
 
 /* =====================================================
    CLOUD SYNC（Supabase） — 複数端末・複数ブラウザでデータを共有
-   ---------------------------------------------------
-   セットアップ手順:
-   1) https://supabase.com で無料アカウント登録 →「New project」でプロジェクト作成
-   2) 左メニュー「SQL Editor」で以下を実行してテーブルを作成:
-
-      create table portal_data (
-        id text primary key,
-        data jsonb not null,
-        updated_at timestamptz default now()
-      );
-      alter table portal_data enable row level security;
-      create policy "public read"   on portal_data for select using (true);
-      create policy "public insert" on portal_data for insert with check (true);
-      create policy "public update" on portal_data for update using (true);
-      alter publication supabase_realtime add table portal_data;
-
-   3) 左メニュー「Project Settings」→「API」で
-      Project URL と anon public key を確認し、下の2行に貼り付ける。
-
-   ※ anon keyはSupabaseの仕様上、クライアント側（このHTML）に埋め込まれる
-     前提の鍵です。上記のpolicyは「誰でも読み書きできる」設定のため、
-     社内利用の範囲では現実的ですが、URLを知る誰でもデータを書き換えられる
-     点は理解した上でご利用ください。厳密な権限管理が必要な場合はSupabase側の
-     認証機能（Auth）の追加を検討してください。
    ===================================================== */
-const SUPABASE_URL='https://uxmefeugnnarvmogwiil.supabase.co';        // 例: 'https://xxxxxxxx.supabase.co'
-const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV4bWVmZXVnbm5hcnZtb2d3aWlsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxNjU4MTgsImV4cCI6MjA5OTc0MTgxOH0.2LE5Bnh3OU5fvsa9oThKBYfRqFIyUboOCDFWrCogT7U';   // 例: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
+const SUPABASE_URL='https://uxmefeugnnarvmogwiil.supabase.co';
+const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV4bWVmZXVnbm5hcnZtb2d3aWlsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxNjU4MTgsImV4cCI6MjA5OTc0MTgxOH0.2LE5Bnh3OU5fvsa9oThKBYfRqFIyUboOCDFWrCogT7U';
 const SUPABASE_TABLE='portal_data';
 const SUPABASE_ROW_ID='tekken_portal';
 
@@ -528,7 +530,6 @@ async function loadFromCloud(){
       lastSyncedJSON=JSON.stringify(appData);
       setCloudStatus('☁️ クラウド同期：有効');
     }else{
-      // クラウド側にまだ何もない場合は、今のローカルデータを初期データとしてアップロード
       await pushToCloudNow();
       setCloudStatus('☁️ クラウド同期：有効（初回アップロード）');
     }
@@ -564,7 +565,7 @@ function subscribeCloudRealtime(){
     .on('postgres_changes',{event:'*',schema:'public',table:SUPABASE_TABLE,filter:`id=eq.${SUPABASE_ROW_ID}`},payload=>{
       if(!payload.new||!payload.new.data) return;
       const incomingJSON=JSON.stringify(payload.new.data);
-      if(incomingJSON===lastSyncedJSON) return; // 自分の変更なので無視
+      if(incomingJSON===lastSyncedJSON) return;
       isApplyingRemoteData=true;
       appData=payload.new.data;
       localStorage.setItem('tekken_v3',JSON.stringify(appData));
@@ -581,7 +582,6 @@ function subscribeCloudRealtime(){
     .subscribe();
 }
 
-/* 既存データに掲示板機能・改善提案箱がなければ追加（旧バージョンからの移行対応） */
 (function migrateBoard(){
   let changed=false;
   if(!appData.board){appData.board=[];changed=true;}
@@ -631,13 +631,10 @@ function p2(n){return String(n).padStart(2,'0');}
 updateClock();setInterval(updateClock,1000);
 
 /* =====================================================
-   WEATHER — Open-Meteo（無料・登録不要）
+   WEATHER — Open-Meteo
    ===================================================== */
 const WX_CODES={0:'☀️ 快晴',1:'🌤️ 晴れ',2:'⛅ 曇り',3:'☁️ 曇天',45:'🌫️ 霧',48:'🌫️ 霧',51:'🌦️ 霧雨',53:'🌦️ 霧雨',55:'🌦️ 霧雨',61:'🌧️ 小雨',63:'🌧️ 雨',65:'🌧️ 大雨',71:'❄️ 小雪',73:'❄️ 雪',75:'❄️ 大雪',80:'🌧️ にわか雨',81:'🌧️ にわか雨',82:'⛈️ 激しい雨',95:'⛈️ 雷雨',99:'⛈️ 雷雨'};
-// 高崎市の座標（工場の実際の位置に変更可能）
 const SITE_LAT=36.3219,SITE_LON=139.0033,SITE_NAME='高崎市（群馬）';
-/* 気象庁 警報・注意報API用（前橋地方気象台／群馬県）
-   100000 = 群馬県, 100010 = 群馬県南部（高崎市を含む一次細分区域） */
 const JMA_PREF_CODE='100000',JMA_AREA_CODE='100010';
 const JMA_WARNING_NAMES={
   '02':'暴風雪警報','03':'大雨警報','04':'洪水警報','05':'暴風警報','06':'大雪警報','07':'波浪警報','08':'高潮警報',
@@ -648,7 +645,6 @@ const JMA_WARNING_NAMES={
 let jmaWarnings=[];
 
 function wbgtFromTempHum(t,h){
-  // 簡易WBGT推定式（屋外日射あり）
   return Math.round((0.735*t)+(0.0374*h)+(0.00292*t*h)+(7.619)-(4.557*(t**2)/1000)-(0.0572*h)-4.064);
 }
 function wbgtLevel(w){
@@ -683,13 +679,9 @@ async function fetchWeather(){
     const now=new Date();
     document.getElementById('wx-update').textContent=`最終更新: ${p2(now.getHours())}:${p2(now.getMinutes())}`;
 
-    // 熱中症カードのステータスを自動更新
     updateHeatCard(temp,wbgt,lv);
-    // 熱中症セクションデータを自動更新
     updateHeatSection(temp,hum,wbgt,lv,WX_CODES[code]||'—');
-    // アラート通知
     autoAlerts();
-    // 気象警報・注意報を取得（非同期・失敗しても天気表示には影響しない）
     fetchWarnings();
   }catch(e){
     document.getElementById('wx-update').textContent='取得失敗（ネットワーク確認）';
@@ -724,7 +716,6 @@ async function fetchWarnings(){
       sec.rows[2][1]=jmaWarnings.length?`${jmaWarnings.join('、')}（前橋地方気象台発表）`:'現在、発表されている警報・注意報はありません（前橋地方気象台）';
       saveData();
     }
-    // お知らせに反映
     autoAlerts();
   }catch(e){
     el.textContent='取得失敗';
@@ -748,22 +739,20 @@ function updateHeatSection(temp,hum,wbgt,lv,wxStr){
 }
 
 /* =====================================================
-   AUTO ALERTS — 校正・資格期限チェック
+   AUTO ALERTS
    ===================================================== */
 function autoAlerts(){
   const today=new Date();today.setHours(0,0,0,0);
   const alerts=[];
 
-  // 校正期限
   (appData.sections['calibration']?.rows||[]).forEach(row=>{
-    const name=row[0],dateStr=row[2],badge=row[3]||'';
+    const name=row[0],dateStr=row[2];
     const d=parseDate(dateStr);if(!d) return;
     const diff=Math.floor((d-today)/(1000*60*60*24));
     if(diff<0) alerts.push(`🔴 【校正期限切れ】${name}（期限: ${dateStr}）`);
     else if(diff<=30) alerts.push(`🟠 【校正期限30日以内】${name}（あと${diff}日 / ${dateStr}）`);
   });
 
-  // 資格期限
   (appData.sections['license']?.rows||[]).forEach(row=>{
     const name=row[0],skill=row[1],dateStr=row[3];
     const d=parseDate(dateStr);if(!d) return;
@@ -772,21 +761,16 @@ function autoAlerts(){
     else if(diff<=60) alerts.push(`🟠 【資格更新60日以内】${name}：${skill}（あと${diff}日）`);
   });
 
-  // WBGT警告
   if(wxData&&wxData.wbgt>=28) alerts.push(`🌡️ 【熱中症警戒】現在のWBGT:${wxData.wbgt}℃ — 水分補給・休憩を徹底してください`);
 
-  // 気象警報・注意報（気象庁）
   jmaWarnings.forEach(name=>{
     const prefix=name.endsWith('特別警報')||name.endsWith('警報')?'🔴':'🟠';
     alerts.push(`${prefix} 【気象庁発表】${name}が発表されています（${SITE_NAME}）`);
   });
 
-  // 既存の自動アラート行を消して再追加
   appData.notices=appData.notices.filter(n=>!n.startsWith('🔴')&&!n.startsWith('🟠')&&!n.startsWith('🌡️'));
   appData.notices=[...alerts,...appData.notices];
   saveData();renderNotices();
-
-  // 朝礼担当を自動更新
   updateMorningDuty();
 }
 
@@ -798,7 +782,7 @@ function parseDate(str){
 }
 
 /* =====================================================
-   ROTATION — 朝礼担当自動計算
+   ROTATION
    ===================================================== */
 function getTodayDuty(){
   const members=appData.rotation?.members||[];
@@ -822,10 +806,8 @@ function getNextDuty(){
 function updateMorningDuty(){
   const duty=getTodayDuty();
   const next=getNextDuty();
-  // カードステータス更新
   const card=appData.cards.find(c=>c.id==='morning');
   if(card){card.status=`本日担当：${duty}`;saveData();renderCards();}
-  // セクションデータ更新
   const sec=appData.sections['morning'];
   if(sec){
     if(sec.rows[0]) sec.rows[0][1]=duty;
@@ -834,12 +816,11 @@ function updateMorningDuty(){
   }
 }
 
-/* ローテーション設定モーダル */
 function openRotationSettings(){
   const members=appData.rotation?.members||[];
   const el=document.getElementById('rotation-members');
   el.innerHTML='';
-  members.forEach((m,i)=>{
+  members.forEach((m)=>{
     const row=document.createElement('div');row.className='rotation-member';
     row.innerHTML=`<input type="text" value="${escH(m)}" placeholder="氏名">
       <button class="row-del" onclick="this.parentElement.remove()">✕</button>`;
@@ -879,19 +860,8 @@ function setLang(lang){
   document.getElementById('translate-btn').textContent=L.transBtn;
   document.querySelector('footer').textContent=L.footer;
   renderCards();renderNotices();
-  if(lang!=='ja') translateUI(lang);
 }
 
-// ページUI全体を翻訳（天気バーラベルなど）
-async function translateUI(lang){
-  // 気象バーラベルのみシンプルに差し替え（I18Nから）
-  const L=I18N[lang]||I18N.ja;
-  const els={
-    'wx-location':SITE_NAME
-  };
-}
-
-/* テキスト翻訳（MyMemory API） — 長文は自動分割して順番に翻訳し、結合する */
 function splitIntoChunks(text,maxLen){
   maxLen=maxLen||450;
   const sentences=text.split(/(?<=[。！？\n])/);
@@ -987,7 +957,6 @@ function renderCards(){
     const div=document.createElement('div');
     div.className='card';
     div.onclick=e=>{if(e.target.closest('.card-edit-btn')) return;openSection(card.id);};
-    // 朝礼カードにはローテーション設定ボタンも追加
     const extraBtn=card.id==='morning'?`<button class="card-edit-btn" style="right:70px;" onclick="event.stopPropagation();openRotationSettings()">👥 担当設定</button>`:'';
     div.innerHTML=`
       ${extraBtn}
@@ -1035,7 +1004,7 @@ function saveCardEdit(){
 }
 
 /* =====================================================
-   REORDER — 機能メニューの並び替え
+   REORDER
    ===================================================== */
 let reorderWorking=null;
 
@@ -1110,21 +1079,18 @@ function openSection(id){
 
   const L=I18N[currentLang]||I18N.ja;
 
-  // 掲示板セクションは専用UIを表示して以降の共通処理はスキップ
   if(id==='board'){
     renderBoard(body);
     openModal('section-modal');
     return;
   }
 
-  // 占いセクションも専用UI
   if(id==='horoscope'){
     renderHoroscope(body);
     openModal('section-modal');
     return;
   }
 
-  // 天気セクションは気象データを表示
   if(id==='heat'&&wxData){
     const bar=document.createElement('div');
     bar.style='background:#e3f2fd;border-radius:8px;padding:12px;margin-bottom:12px;font-size:13px;';
@@ -1141,7 +1107,6 @@ function openSection(id){
   addBtn.className='add-row-btn';addBtn.textContent=L.addRow;
   addBtn.onclick=()=>addTableRow(id);body.appendChild(addBtn);
 
-  // 画像セクション
   const imgSec=document.createElement('div');imgSec.style.marginTop='18px';
   imgSec.innerHTML=`<div style="font-size:12px;font-weight:700;color:var(--brand-dark);margin-bottom:6px;">📎 添付画像・ファイル</div>`;
   const prev=document.createElement('div');prev.className='img-preview-list';prev.id=`ip-${id}`;imgSec.appendChild(prev);
@@ -1239,7 +1204,7 @@ function saveTableEdit(id){
 }
 
 /* =====================================================
-   BOARD — みんなの掲示板（投稿・リアクション）
+   BOARD
    ===================================================== */
 function loadReacted(){
   try{return JSON.parse(localStorage.getItem('tekken_reacted_v1')||'{}');}catch(e){return{};}
@@ -1252,7 +1217,6 @@ function updateBoardCardStatus(){
 }
 
 function renderBoard(container){
-  // 投稿フォーム
   const formWrap=document.createElement('div');
   formWrap.style='background:#f0f6ff;border-radius:10px;padding:14px;margin-bottom:16px;';
   formWrap.innerHTML=`
@@ -1301,7 +1265,6 @@ function renderBoard(container){
     openSection('board');
   };
 
-  // フィード
   const feedLabel=document.createElement('div');
   feedLabel.style='font-size:12px;font-weight:700;color:var(--brand-dark);margin:14px 0 8px;';
   feedLabel.textContent=`💬 みんなの投稿（${appData.board.length}件）`;
@@ -1363,7 +1326,7 @@ function deleteBoardPost(id){
 }
 
 /* =====================================================
-   HOROSCOPE — 今日の占い（Free Horoscope API + 自動和訳）
+   HOROSCOPE
    ===================================================== */
 const ZODIAC_SIGNS=[
   {en:'aries',ja:'牡羊座',icon:'♈'},{en:'taurus',ja:'牡牛座',icon:'♉'},{en:'gemini',ja:'双子座',icon:'♊'},
@@ -1389,7 +1352,6 @@ function renderHoroscope(container){
   const resultEl=wrap.querySelector('#horo-result');
   const selEl=wrap.querySelector('#horo-sign-sel');
   wrap.querySelector('#horo-fetch-btn').onclick=()=>fetchHoroscope(selEl.value,resultEl);
-  // 前回選んだ星座があれば自動で表示
   if(appData.horoscopeSign) fetchHoroscope(appData.horoscopeSign,resultEl);
 }
 
@@ -1485,7 +1447,6 @@ document.addEventListener('keydown',e=>{
   if(e.key==='Escape') document.querySelectorAll('.modal-overlay.active').forEach(el=>el.classList.remove('active'));
 });
 
-/* 確認ダイアログ（window.confirmはサンドボックス環境等でブロックされる場合があるため、独自UIで代替） */
 let _confirmCallback=null;
 function showConfirm(message,onConfirm){
   document.getElementById('confirm-message').textContent=message;
@@ -1510,21 +1471,29 @@ function escA(s){return String(s).replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 renderNotices();
 renderCards();
 fetchWeather();
-setInterval(fetchWeather,60*60*1000); // 1時間ごとに自動更新
+setInterval(fetchWeather,60*60*1000);
 
-/* クラウド同期の初期化 */
 if(cloudEnabled){
   loadFromCloud().then(()=>{ subscribeCloudRealtime(); });
 }else{
   setCloudStatus('💻 ローカル保存のみ（クラウド未設定）');
 }
 setTimeout(()=>{updateMorningDuty();autoAlerts();},1000);
+
+/* =====================================================
+   SERVICE WORKER REGISTER (PWA)
+   ===================================================== */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then((reg) => {
+        console.log('Service Worker 登録成功:', reg.scope);
+      })
+      .catch((err) => {
+        console.error('Service Worker 登録失敗:', err);
+      });
+  });
+}
 </script>
 </body>
 </html>
-apps-fileview.texmex_20260618.00_p1
-tekkenn.html
-tekkenn.html を表示しています。 
-apps-fileview.texmex_20260708.11_p0
-tekken (6).html
-tekken (6).html を表示しています。
